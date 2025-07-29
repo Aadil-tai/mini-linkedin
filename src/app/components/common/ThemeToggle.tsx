@@ -1,5 +1,6 @@
 "use client";
-import { useTheme } from "@/app/contexts/ThemeContext";
+
+import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 
 type ThemeOption = {
@@ -9,7 +10,7 @@ type ThemeOption = {
 };
 
 export default function ThemeToggle() {
-  const { theme, resolvedTheme, setTheme, isThemeLoaded } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -23,23 +24,14 @@ export default function ThemeToggle() {
     { value: "system", label: "System", icon: "💻" },
   ];
 
-  // Show loading state during SSR
-  if (!mounted || !isThemeLoaded) {
-    return (
-      <div className="p-2 rounded-lg">
-        <div className="w-6 h-6" />
-      </div>
-    );
-  }
+  if (!mounted) return null;
 
-  // Get the appropriate icon for the current theme
   const currentThemeIcon =
     themes.find((t) => t.value === (theme === "system" ? resolvedTheme : theme))
       ?.icon || "☀️";
 
   return (
     <div className="relative">
-      {/* Main toggle button */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center space-x-1 transition-colors duration-200"
@@ -51,7 +43,6 @@ export default function ThemeToggle() {
         <ChevronDownIcon />
       </button>
 
-      {/* Dropdown menu */}
       {showDropdown && (
         <>
           <div
@@ -81,7 +72,6 @@ export default function ThemeToggle() {
   );
 }
 
-// Sub-component for individual theme options
 function ThemeOptionButton({
   option,
   isActive,
@@ -108,7 +98,6 @@ function ThemeOptionButton({
   );
 }
 
-// SVG Icons as separate components
 function ChevronDownIcon() {
   return (
     <svg

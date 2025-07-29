@@ -1,0 +1,22 @@
+/* styles/phoneInputOverride.css */
+
+.react-phone-input {
+  position: relative;
+}
+
+/* Dropdown menu in dark mode */
+.dark .react-phone-input .country-list {
+  background-color: #1f2937; /* Tailwind's gray-800 */
+  color: #f9fafb; /* Tailwind's gray-100 */
+  border: 1px solid #4b5563; /* Tailwind's gray-600 */
+}
+
+.dark .react-phone-input .country-list .country:hover {
+  background-color: #374151; /* Tailwind's gray-700 */
+  color: #ffffff;
+}
+
+.dark .react-phone-input .country-list .country.highlight {
+  background-color: #2563eb; /* Tailwind's blue-600 */
+  color: #fff;
+}
