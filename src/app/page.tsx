@@ -30,7 +30,7 @@ export default function HomePage() {
           </div>
           <nav className="flex items-center space-x-3">
             <Link
-              href="/sign-in"
+              href="/login"
               className="px-6 py-2.5 text-gray-700 dark:text-gray-200 font-medium rounded-xl hover:bg-white/70 dark:hover:bg-gray-800/70 backdrop-blur-sm transition-all duration-300 hover:shadow-md"
             >
               Sign in

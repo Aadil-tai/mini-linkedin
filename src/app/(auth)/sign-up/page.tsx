@@ -34,17 +34,13 @@ export default function SignUpPage() {
       });
 
       if (error) throw error;
-      router.replace("/dashboard");
+      router.replace("/onboarding");
     } catch (error) {
       setError("root", {
         type: "manual",
         message: "Sign up failed. Please try again.",
       });
     }
-  };
-
-  const handleGoogleSignIn = async () => {
-    window.location.href = "/api/auth/google";
   };
 
   return (
@@ -190,7 +186,7 @@ export default function SignUpPage() {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Already on Mini-LinkedIn?{" "}
                 <Link
-                  href="/login"
+                  href="/(auth)/login"
                   className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors hover:underline"
                 >
                   Sign in
