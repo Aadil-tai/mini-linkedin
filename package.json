@@ -6,11 +6,10 @@
     "dev": "set NODE_NO_WARNINGS=1 && next dev",
     "build": "next build",
     "start": "NODE_NO_WARNINGS=1 vite",
-    "lint": "next lint"
+    "lint": "ESLINT_NO_DEV_ERRORS=true next lint",
+    "postinstall": "npx npm-force-resolutions"
   },
   "dependencies": {
-    "@eslint/config-array": "^0.21.0",
-    "@eslint/object-schema": "^2.1.6",
     "@fontsource/poppins": "^5.2.6",
     "@hookform/resolvers": "^5.2.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -43,10 +42,11 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "cross-spawn": "^7.0.6",
-    "eslint": "^9.32.0",
-    "eslint-config-next": "^15.4.5",
-    "eslint-plugin-react": "^7.37.5",
+    "eslint": "8.56.0",
+    "eslint-config-next": "14.2.3",
+    "eslint-plugin-react": "7.33.2",
     "glob": "^11.0.3",
+    "npm-force-resolutions": "^0.0.10",
     "postcss": "^8",
     "rimraf": "^6.0.1",
     "supabase": "^2.31.8",
@@ -54,18 +54,9 @@
     "typescript": "^5"
   },
   "resolutions": {
-    "inflight": "^2.0.0",
-    "rimraf": "^4.0.0",
-    "glob": "^9.0.0",
-     "eslint": "^8.56.0", 
-    "eslint-config-next": "14.2.3"  
-  },
-  "overrides": {
-    "ajv": "^8.17.1",
-    "whatwg-url": "^14.0.0",
-    "eslint": {
-      "@eslint/js": "8.56.0",
-      "eslint-config-next": "14.2.3"
-    }
+    "eslint": "8.56.0",
+    "eslint-config-next": "14.2.3",
+    "@eslint/js": "8.56.0",
+    "eslint-plugin-react": "7.33.2"
   }
 }
