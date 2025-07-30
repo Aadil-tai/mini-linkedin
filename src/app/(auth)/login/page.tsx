@@ -2,11 +2,11 @@
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/app/lib/superbase/client";
-import { FormInput } from "@/app/components/forms/FormInput";
-import { FormButton } from "@/app/components/forms/FormButton";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginFormData, loginSchema } from "@/app/lib/validation/auth";
+import { supabase } from "@/lib/superbase/client";
+import { FormInput } from "@/components/forms/FormInput";
+import { FormButton } from "@/components/forms/FormButton";
+import { LoginFormData, loginSchema } from "@/lib/validation/auth";
 
 export default function LoginPage() {
   const router = useRouter();
