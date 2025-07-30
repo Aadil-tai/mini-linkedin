@@ -1,9 +1,14 @@
 "use client";
 import "../../app/style/PhoneInputOverride.css";
 
-import { useState } from "react";
-import { Controller } from "react-hook-form";
-import { Control, FieldErrors, UseFormRegister } from "react-hook-form";
+import { useEffect, useState } from "react";
+import {
+  Controller,
+  Control,
+  FieldErrors,
+  UseFormRegister,
+  UseFormWatch,
+} from "react-hook-form";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
@@ -14,13 +19,55 @@ interface PersonalStepProps {
   control: Control<OnboardingFormSchema>;
   register: UseFormRegister<OnboardingFormSchema>;
   errors: FieldErrors<OnboardingFormSchema>;
+  email?: string | null;
+  photo?: string | null;
+  watch: UseFormWatch<OnboardingFormSchema>;
 }
 
-export function PersonalStep({ control, register, errors }: PersonalStepProps) {
+export function PersonalStep({
+  control,
+  register,
+  errors,
+  email,
+  photo,
+  watch,
+}: PersonalStepProps) {
   const [phone, setPhone] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // On mount or photo prop change, set previewUrl from photo prop immediately
+  useEffect(() => {
+    if (photo) {
+      setPreviewUrl(photo);
+    }
+  }, [photo]);
+
+  // Subscribe to watch form photo field and sync previewUrl accordingly
+  useEffect(() => {
+    const subscription = watch((value) => {
+      const photoValue = value.personal?.photo;
+      if (!photoValue) {
+        setPreviewUrl(null);
+      } else if (typeof photoValue === "string") {
+        // photo field contains URL string
+        setPreviewUrl(photoValue);
+      } else if (photoValue instanceof File) {
+        // photo field is a File object, create local preview URL
+        const url = URL.createObjectURL(photoValue);
+        setPreviewUrl(url);
+        // Clean up URL object to avoid memory leaks
+        return () => {
+          URL.revokeObjectURL(url);
+        };
+      } else {
+        setPreviewUrl(null);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  // ImgBB image upload handler
   const handleImageUpload = async (
     file: File,
     onChange: (url: string) => void
@@ -40,12 +87,18 @@ export function PersonalStep({ control, register, errors }: PersonalStepProps) {
       );
 
       const data = await res.json();
-      const imageUrl = data.data.url;
 
-      setPreviewUrl(imageUrl);
-      onChange(imageUrl);
+      if (data.success && data.data.url) {
+        const imageUrl = data.data.url;
+        setPreviewUrl(imageUrl);
+        onChange(imageUrl);
+      } else {
+        console.error("Image upload did not succeed", data);
+        alert("Image upload failed. Please try again.");
+      }
     } catch (err) {
       console.error("Image upload failed", err);
+      alert("Image upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -55,7 +108,7 @@ export function PersonalStep({ control, register, errors }: PersonalStepProps) {
     <div className="space-y-4 text-gray-900 dark:text-gray-100">
       <h2 className="text-2xl font-bold">Your personal details</h2>
 
-      {/* 🖼 Profile Picture Upload */}
+      {/* Profile Picture Upload */}
       <Controller
         control={control}
         name="personal.photo"
@@ -69,9 +122,10 @@ export function PersonalStep({ control, register, errors }: PersonalStepProps) {
                     src={previewUrl}
                     alt="Profile"
                     className="w-full h-full object-cover"
+                    draggable={false}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-sm text-gray-400 dark:text-gray-500">
+                  <div className="w-full h-full flex items-center justify-center text-sm text-gray-400 dark:text-gray-500 select-none">
                     Upload
                   </div>
                 )}
@@ -87,6 +141,7 @@ export function PersonalStep({ control, register, errors }: PersonalStepProps) {
                     className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600"
                     aria-label="Remove Image"
                     title="Remove"
+                    disabled={uploading}
                   >
                     ✕
                   </button>
@@ -103,26 +158,11 @@ export function PersonalStep({ control, register, errors }: PersonalStepProps) {
                   if (file) {
                     const localPreview = URL.createObjectURL(file);
                     setPreviewUrl(localPreview); // Instant UI feedback
-
-                    // Upload to ImgBB
-                    const upload = async () => {
-                      const formData = new FormData();
-                      formData.append("image", file);
-                      try {
-                        const res = await fetch(
-                          `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
-                          { method: "POST", body: formData }
-                        );
-                        const data = await res.json();
-                        field.onChange(data.data.url); // Save image URL to form
-                      } catch (err) {
-                        console.error("Upload failed", err);
-                      }
-                    };
-
-                    upload();
+                    handleImageUpload(file, field.onChange);
                   }
                 }}
+                disabled={uploading}
+                aria-disabled={uploading}
               />
             </div>
           </div>
@@ -133,22 +173,26 @@ export function PersonalStep({ control, register, errors }: PersonalStepProps) {
         label="First Name"
         {...register("personal.firstName")}
         error={errors.personal?.firstName}
+        required
       />
 
       <FormInput
         label="Last Name"
         {...register("personal.lastName")}
         error={errors.personal?.lastName}
+        required
       />
 
       <FormInput
         label="Email"
         type="email"
         {...register("personal.email")}
+        defaultValue={email ?? ""}
         error={errors.personal?.email}
+        readOnly
       />
 
-      {/* 📞 Phone Input */}
+      {/* Phone Input */}
       <div>
         <label className="block text-sm font-medium mb-1 dark:text-gray-300">
           Phone
@@ -167,23 +211,30 @@ export function PersonalStep({ control, register, errors }: PersonalStepProps) {
               inputProps={{
                 name: field.name,
                 onBlur: field.onBlur,
+                "aria-invalid": errors.personal?.phone ? "true" : "false",
               }}
               containerClass="!w-full !relative z-10"
               inputClass={`
-          !w-full !pl-14 !pr-10 !py-2 !rounded-md !border !outline-none
-          ${errors.personal?.phone ? "!border-red-500" : "!border-gray-300"}
-          focus:!ring-2 focus:!ring-blue-500 focus:!border-blue-500
-          dark:!bg-gray-800 dark:!text-white dark:!border-gray-600
-        `}
+                !w-full !pl-14 !pr-10 !py-2 !rounded-md !border !outline-none
+                ${
+                  errors.personal?.phone
+                    ? "!border-red-500"
+                    : "!border-gray-300"
+                }
+                focus:!ring-2 focus:!ring-blue-500 focus:!border-blue-500
+                dark:!bg-gray-800 dark:!text-white dark:!border-gray-600
+              `}
               buttonClass="!absolute !left-0 !top-1/2 !-translate-y-1/2 !h-full !bg-transparent !border-none dark:!bg-transparent z-20"
-              dropdownStyle={{
-                zIndex: 9999, // ensure dropdown is above modals/cards
-              }}
+              dropdownStyle={{ zIndex: 9999 }}
             />
           )}
         />
         {errors.personal?.phone && (
-          <p className="text-red-500 text-sm mt-1">
+          <p
+            className="text-red-500 text-sm mt-1"
+            role="alert"
+            aria-live="assertive"
+          >
             {errors.personal.phone.message}
           </p>
         )}

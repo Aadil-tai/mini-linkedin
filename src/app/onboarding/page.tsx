@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -9,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+
 import { CompanyStep } from "./CompanyStep";
 import { ProfessionalStep } from "./ProfessionalStep";
 import { PersonalStep } from "./PersonalStep";
@@ -17,11 +19,13 @@ import {
   onboardingSchema,
 } from "@/lib/schema/onboardingSchema";
 import { FormButton } from "@/components/forms/FormButton";
+import { supabase } from "@/lib/superbase/client";
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [currentSkill, setCurrentSkill] = useState("");
 
+  // Initialize the form hooks here before useEffect!
   const {
     control,
     register,
@@ -38,6 +42,43 @@ export default function OnboardingPage() {
       personal: { photo: null },
     },
   });
+
+  // User info state for displaying email, photo, fullName etc.
+  const [userInfo, setUserInfo] = useState<{
+    email: string | null;
+    photo: string | null;
+    fullName: string | null;
+  }>({
+    email: null,
+    photo: null,
+    fullName: null,
+  });
+
+  // Fetch current user and pre-fill form values as soon as useForm is ready
+  useEffect(() => {
+    async function fetchUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setUserInfo({
+          email: user.email ?? null,
+          photo: user.user_metadata?.avatar_url || null,
+          fullName:
+            user.user_metadata?.full_name || user.user_metadata?.name || "",
+        });
+
+        setValue("personal.email", user.email ?? "");
+        setValue("personal.photo", user.user_metadata?.avatar_url ?? "");
+        setValue(
+          "personal.firstName",
+          user.user_metadata?.full_name || user.user_metadata?.name || ""
+        );
+      }
+    }
+    fetchUser();
+  }, [setValue]);
 
   const skills = watch("professional.skills") || [];
 
@@ -78,7 +119,7 @@ export default function OnboardingPage() {
 
   const onSubmit = (data: OnboardingFormSchema) => {
     console.log("Form submitted", data);
-    // Handle form submission
+    // TODO: Save onboarding data to your database here, e.g., supabase.from('profiles').update(...)
   };
 
   return (
@@ -121,6 +162,9 @@ export default function OnboardingPage() {
               control={control}
               register={register}
               errors={errors}
+              email={userInfo.email}
+              photo={userInfo.photo}
+              watch={watch} // pass watch if PersonalStep needs it
             />
           )}
 
