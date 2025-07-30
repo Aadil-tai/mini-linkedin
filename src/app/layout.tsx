@@ -14,8 +14,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Your App Name",
-  description: "Your app description",
+  title: "Mini LinkedIn - Professional Networking",
+  description: "Connect with professionals and grow your network",
   metadataBase: new URL("https://yourdomain.com"), // Recommended for SEO
 };
 

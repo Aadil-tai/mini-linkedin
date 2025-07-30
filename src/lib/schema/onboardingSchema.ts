@@ -10,6 +10,7 @@ export const onboardingSchema = z.object({
   }),
   professional: z.object({
     jobTitle: z.string().min(1, "Job title required"),
+    experience: z.string().optional(), // Optional experience field
     skills: z.array(z.string()).min(1, "Add at least one skill"),
   }),
   company: z.object({
