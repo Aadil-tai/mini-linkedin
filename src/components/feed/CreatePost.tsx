@@ -5,30 +5,26 @@ import { RichTextEditor } from "@/components/common/RichTextEditor";
 import { FormButton } from "@/components/forms/FormButton";
 import { ImageIcon, X, Video, BarChart, Smile } from "lucide-react";
 import { supabase } from "@/lib/superbase/client";
+import { useProfile } from "@/hooks/userProfile";
 import type { Post } from "@/lib/superbase/postActions";
 
 interface CreatePostProps {
   onPostCreated?: (newPost: Post) => void;
-  userProfile?: {
-    avatar_url?: string;
-    first_name?: string;
-    last_name?: string;
-    job_title?: string;
-  };
 }
 
-export default function CreatePost({
-  onPostCreated,
-  userProfile,
-}: CreatePostProps) {
+export default function CreatePost({ onPostCreated }: CreatePostProps) {
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Debug: Log userProfile prop
-  console.log("CreatePost - userProfile prop:", userProfile);
+  // Use the useProfile hook to get current user's profile
+  const { profile, user, loading, error } = useProfile();
+
+  // Debug: Log profile data
+  console.log("CreatePost - profile from hook:", profile);
+  console.log("CreatePost - user from hook:", user);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,8 +105,8 @@ export default function CreatePost({
       // Fetch the user's profile_id from profiles table
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("id")
-        .eq("id", user.id) // Changed from "user_id" to "id"
+        .select("id, user_id")
+        .eq("user_id", user.id) // Use user_id to find the profile
         .single();
 
       if (profileError || !profile) {
@@ -149,7 +145,9 @@ export default function CreatePost({
         .select(
           `
         *,
-        profiles (
+        profiles!posts_profile_id_fkey (
+          id,
+          user_id,
           first_name,
           last_name,
           avatar_url,
@@ -188,25 +186,49 @@ export default function CreatePost({
   };
 
   const userName =
-    userProfile?.first_name && userProfile?.last_name
-      ? `${userProfile.first_name} ${userProfile.last_name}`
-      : "User";
+    profile?.first_name && profile?.last_name
+      ? `${profile.first_name} ${profile.last_name}`
+      : profile?.full_name ||
+        user?.user_metadata?.full_name ||
+        user?.email ||
+        "User";
+
+  // Get user initials for fallback
+  const getUserInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   // Debug: Log computed values
   console.log("CreatePost - userName:", userName);
-  console.log("CreatePost - avatar_url:", userProfile?.avatar_url);
+  console.log("CreatePost - avatar_url:", profile?.avatar_url);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div className="flex space-x-3">
-        <img
-          src={
-            userProfile?.avatar_url ||
-            "https://via.placeholder.com/48x48?text=" + (userName[0] || "U")
-          }
-          alt={userName}
-          className="w-12 h-12 rounded-full object-cover"
-        />
+        {profile?.avatar_url ? (
+          <img
+            src={profile.avatar_url}
+            alt={userName}
+            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
+            onError={(e) => {
+              console.error(
+                "Failed to load profile image:",
+                profile.avatar_url
+              );
+              // Hide the image and show fallback
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold ring-2 ring-gray-200 dark:ring-gray-700">
+            {getUserInitials(userName)}
+          </div>
+        )}
 
         <div className="flex-1">
           {!isExpanded ? (

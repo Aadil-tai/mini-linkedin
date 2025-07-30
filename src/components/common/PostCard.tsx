@@ -24,6 +24,8 @@ interface PostCardProps {
     is_liked: boolean;
     created_at: string;
     profiles?: {
+      id?: string;
+      user_id?: string;
       first_name?: string;
       last_name?: string;
       avatar_url?: string;
@@ -41,6 +43,8 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
 
   // Debug: Log post data
   console.log("PostCard rendering post:", post);
+  console.log("Profile data:", post.profiles);
+  console.log("Avatar URL:", post.profiles?.avatar_url);
 
   useEffect(() => {
     const getUser = async () => {
@@ -91,20 +95,50 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
     post.profiles?.first_name && post.profiles?.last_name
       ? `${post.profiles.first_name} ${post.profiles.last_name}`
       : "Anonymous User";
-  const authorAvatar = post.profiles?.avatar_url || "/default-avatar.png";
-  const authorTitle = post.profiles?.job_title || "User";
-  const isAuthor = currentUserId === post.profile_id;
+
+  // Get profile image with better fallback handling
+  const getProfileImage = () => {
+    if (post.profiles?.avatar_url) {
+      return post.profiles.avatar_url;
+    }
+    return null; // No fallback image, will show initials instead
+  };
+
+  const authorAvatar = getProfileImage();
+  const authorTitle = post.profiles?.job_title || "Professional";
+  const isAuthor = currentUserId === post.profiles?.user_id; // Compare with profile's user_id
+
+  // Get initials for fallback
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">
       {/* Post Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3">
-          <img
-            src={authorAvatar}
-            alt={authorName}
-            className="w-12 h-12 rounded-full object-cover"
-          />
+          {authorAvatar ? (
+            <img
+              src={authorAvatar}
+              alt={authorName}
+              className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
+              onError={(e) => {
+                console.error("Failed to load profile image:", authorAvatar);
+                // Hide the image on error and show initials fallback
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold ring-2 ring-gray-200 dark:ring-gray-700">
+              {getInitials(authorName)}
+            </div>
+          )}
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white">
               {authorName}

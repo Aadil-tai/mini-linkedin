@@ -91,19 +91,7 @@ export default function FeedPage() {
     <div className="max-w-3xl mx-auto p-4">
       {/* Create Post Section */}
       <div className="mb-6">
-        <CreatePost
-          onPostCreated={handleNewPost}
-          userProfile={
-            userProfile
-              ? {
-                  avatar_url: userProfile.avatar_url || undefined,
-                  first_name: userProfile.first_name || undefined,
-                  last_name: userProfile.last_name || undefined,
-                  job_title: userProfile.job_title || undefined,
-                }
-              : undefined
-          }
-        />
+        <CreatePost onPostCreated={handleNewPost} />
       </div>
 
       {/* Posts Feed */}

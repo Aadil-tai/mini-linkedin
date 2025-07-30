@@ -1,8 +1,9 @@
 import { supabase } from "@/lib/superbase/client";
 import { useState, useEffect } from "react";
 
-interface ProfileData {
+export interface ProfileData {
   id: string;
+  user_id?: string;
   avatar_url?: string | null;
   first_name?: string | null;
   last_name?: string | null;
@@ -23,6 +24,7 @@ interface ProfileData {
 
 export function useProfile(userId?: string) {
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,32 +33,34 @@ export function useProfile(userId?: string) {
       try {
         setLoading(true);
 
-        let query = supabase.from("profiles").select("*");
+        // Get current user first
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) {
+          throw userError;
+        }
 
-        if (userId) {
-          query = query.eq("id", userId); // Changed from "user_id" to "id"
-        } else {
-          // If no userId provided, get current user's profile
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          if (user) {
-            query = query.eq("id", user.id); // Changed from "user_id" to "id"
-          } else {
-            throw new Error("No user found");
+        if (user) {
+          setUser(user);
+          
+          // Use userId parameter if provided, otherwise use current user's id
+          const targetUserId = userId || user.id;
+          
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", targetUserId)
+            .single();
+
+          console.log("useProfile hook - query result:", { profileData, profileError });
+
+          if (profileError && profileError.code !== 'PGRST116') {
+            throw profileError;
           }
+
+          console.log("useProfile hook - setting profile:", profileData);
+          setProfile(profileData);
         }
-
-        const { data, error } = await query.single();
-
-        console.log("useProfile hook - query result:", { data, error });
-
-        if (error) {
-          throw error;
-        }
-
-        console.log("useProfile hook - setting profile:", data);
-        setProfile(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -67,5 +71,5 @@ export function useProfile(userId?: string) {
     fetchProfile();
   }, [userId]);
 
-  return { profile, loading, error };
+  return { profile, user, loading, error };
 }

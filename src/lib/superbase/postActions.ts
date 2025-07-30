@@ -11,6 +11,8 @@ export interface Post {
   is_liked: boolean;
   created_at: string;
   profiles?: {
+    id?: string;
+    user_id?: string;
     first_name?: string;
     last_name?: string;
     avatar_url?: string;
@@ -36,11 +38,11 @@ export async function createPost(data: CreatePostData) {
   console.log("Creating post for user:", user.id);
   console.log("Post data:", data);
 
-  // First, check if user has a profile
+  // First, check if user has a profile using user_id
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id")
-    .eq("id", user.id)
+    .select("id, user_id")
+    .eq("user_id", user.id)
     .single();
 
   if (profileError || !profile) {
@@ -51,7 +53,7 @@ export async function createPost(data: CreatePostData) {
   const { data: post, error } = await supabase
     .from("posts")
     .insert({
-      profile_id: user.id,
+      profile_id: profile.id, // Use profile.id instead of user.id
       content: data.content,
       image_url: data.image_url,
       likes: 0,
@@ -61,7 +63,7 @@ export async function createPost(data: CreatePostData) {
     })
     .select(`
       *,
-      profiles (
+      profiles!posts_profile_id_fkey (
         first_name,
         last_name,
         avatar_url,
@@ -88,7 +90,9 @@ export async function getPosts(page = 0, limit = 10) {
     .from("posts")
     .select(`
       *,
-      profiles (
+      profiles!posts_profile_id_fkey (
+        id,
+        user_id,
         first_name,
         last_name,
         avatar_url,
@@ -103,6 +107,7 @@ export async function getPosts(page = 0, limit = 10) {
     throw error;
   }
 
+  console.log("Fetched posts with profiles:", posts);
   return posts as Post[];
 }
 
@@ -158,11 +163,22 @@ export async function deletePost(postId: string) {
     throw new Error("User not authenticated");
   }
 
+  // First, get the user's profile to get the correct profile ID
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    throw new Error("User profile not found");
+  }
+
   const { error } = await supabase
     .from("posts")
     .delete()
     .eq("id", postId)
-    .eq("profile_id", user.id); // Ensure user can only delete their own posts
+    .eq("profile_id", profile.id); // Use profile.id instead of user.id
 
   if (error) {
     console.error("Error deleting post:", error);
@@ -178,7 +194,9 @@ export async function getPost(postId: string) {
     .from("posts")
     .select(`
       *,
-      profiles (
+      profiles!posts_profile_id_fkey (
+        id,
+        user_id,
         first_name,
         last_name,
         avatar_url,
