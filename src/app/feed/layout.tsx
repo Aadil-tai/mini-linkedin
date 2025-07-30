@@ -1,9 +1,9 @@
 "use client";
 import React from "react";
-import Sidebar from "../components/common/sideBar";
-import Header from "../components/common/Header";
-import RightSidebar from "../components/common/RightSidebar";
 import { ThemeProvider } from "next-themes";
+import Sidebar from "@/components/common/sideBar";
+import Header from "@/components/common/Header";
+import RightSidebar from "@/components/common/RightSidebar";
 
 export default function FeedLayout({
   children,

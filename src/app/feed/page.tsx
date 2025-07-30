@@ -1,9 +1,9 @@
 // app/feed/page.tsx
 "use client";
 import { useState, useCallback } from "react";
-import PostCard from "../components/common/PostCard";
-import { dummyPosts } from "../lib/data/dummyPost";
 import InfiniteScroll from "react-infinite-scroll-component";
+import PostCard from "@/components/common/PostCard";
+import { dummyPosts } from "@/lib/data/dummyPost";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState(dummyPosts);

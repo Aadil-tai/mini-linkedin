@@ -4,9 +4,9 @@ export const onboardingSchema = z.object({
   personal: z.object({
     firstName: z.string().min(1, "First name required"),
     lastName: z.string().min(1, "Last name required"),
-    email: z.string().email("Invalid email").nullable(),
+    email: z.string().email("Invalid email").or(z.string().min(1, "Email required")),
     phone: z.string().min(5, "Phone number required"),
-    photo: z.instanceof(File).nullable().optional(), // 👈 match the File | null type
+    photo: z.union([z.instanceof(File), z.string(), z.null()]).optional(), // Handle File, string URL, or null
   }),
   professional: z.object({
     jobTitle: z.string().min(1, "Job title required"),

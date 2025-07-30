@@ -36,12 +36,26 @@ export function PersonalStep({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // Cleanup function for URL objects
+  const cleanupPreviewUrl = (url: string | null) => {
+    if (url && url.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
+    }
+  };
+
   // On mount or photo prop change, set previewUrl from photo prop immediately
   useEffect(() => {
     if (photo) {
       setPreviewUrl(photo);
     }
   }, [photo]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupPreviewUrl(previewUrl);
+    };
+  }, [previewUrl]);
 
   // Subscribe to watch form photo field and sync previewUrl accordingly
   useEffect(() => {
@@ -56,14 +70,12 @@ export function PersonalStep({
         // photo field is a File object, create local preview URL
         const url = URL.createObjectURL(photoValue);
         setPreviewUrl(url);
-        // Clean up URL object to avoid memory leaks
-        return () => {
-          URL.revokeObjectURL(url);
-        };
       } else {
         setPreviewUrl(null);
       }
     });
+
+    // Cleanup function to unsubscribe from watch
     return () => subscription.unsubscribe();
   }, [watch]);
 
@@ -72,6 +84,18 @@ export function PersonalStep({
     file: File,
     onChange: (url: string) => void
   ) => {
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size should be less than 5MB");
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image file");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("image", file);
 
@@ -135,6 +159,7 @@ export function PersonalStep({
                   <button
                     type="button"
                     onClick={() => {
+                      cleanupPreviewUrl(previewUrl);
                       setPreviewUrl(null);
                       field.onChange(null); // Clear form value
                     }}
@@ -156,6 +181,9 @@ export function PersonalStep({
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
+                    // Clean up previous preview URL if it was a blob
+                    cleanupPreviewUrl(previewUrl);
+
                     const localPreview = URL.createObjectURL(file);
                     setPreviewUrl(localPreview); // Instant UI feedback
                     handleImageUpload(file, field.onChange);
