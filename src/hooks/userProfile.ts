@@ -3,23 +3,22 @@ import { useState, useEffect } from "react";
 
 interface ProfileData {
   id: string;
-  user_id: string;
-  avatar_url: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  job_title: string;
-  bio: string;
-  skills: string[];
-  company: string;
-  company_size: string;
-  industry: string;
-  location: string;
-  website: string;
-  created_at: string;
-  updated_at: string;
+  avatar_url?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  job_title?: string | null;
+  bio?: string | null;
+  skills?: string[] | null;
+  company?: string | null;
+  company_size?: string | null;
+  industry?: string | null;
+  location?: string | null;
+  website?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export function useProfile(userId?: string) {
@@ -35,14 +34,14 @@ export function useProfile(userId?: string) {
         let query = supabase.from("profiles").select("*");
 
         if (userId) {
-          query = query.eq("user_id", userId);
+          query = query.eq("id", userId); // Changed from "user_id" to "id"
         } else {
           // If no userId provided, get current user's profile
           const {
             data: { user },
           } = await supabase.auth.getUser();
           if (user) {
-            query = query.eq("user_id", user.id);
+            query = query.eq("id", user.id); // Changed from "user_id" to "id"
           } else {
             throw new Error("No user found");
           }
@@ -50,10 +49,13 @@ export function useProfile(userId?: string) {
 
         const { data, error } = await query.single();
 
+        console.log("useProfile hook - query result:", { data, error });
+
         if (error) {
           throw error;
         }
 
+        console.log("useProfile hook - setting profile:", data);
         setProfile(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");

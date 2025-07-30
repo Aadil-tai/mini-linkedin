@@ -1,150 +1,302 @@
 "use client";
+
 import { useState } from "react";
-import Image from "next/image";
+import { RichTextEditor } from "@/components/common/RichTextEditor";
+import { FormButton } from "@/components/forms/FormButton";
+import { ImageIcon, X, Video, BarChart, Smile } from "lucide-react";
+import { supabase } from "@/lib/superbase/client";
+import type { Post } from "@/lib/superbase/postActions";
 
 interface CreatePostProps {
-  userAvatar?: string;
-  userName: string;
-  onPostCreate: (content: string, image?: File) => void;
+  onPostCreated?: (newPost: Post) => void;
+  userProfile?: {
+    avatar_url?: string;
+    first_name?: string;
+    last_name?: string;
+    job_title?: string;
+  };
 }
 
-export default function CreatePost({ userAvatar, userName, onPostCreate }: CreatePostProps) {
+export default function CreatePost({
+  onPostCreated,
+  userProfile,
+}: CreatePostProps) {
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Debug: Log userProfile prop
+  console.log("CreatePost - userProfile prop:", userProfile);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImage(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert("Image size should be less than 10MB");
+        return;
+      }
 
-  const handlePost = () => {
-    if (content.trim() || image) {
-      onPostCreate(content, image || undefined);
-      setContent("");
-      setImage(null);
-      setImagePreview(null);
-      setIsExpanded(false);
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        alert("Please select a valid image file");
+        return;
+      }
+
+      setImage(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
     }
   };
 
   const removeImage = () => {
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setImage(null);
     setImagePreview(null);
   };
 
+  const uploadImageToImgBB = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await fetch(
+        `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success && data.data.url) {
+        return data.data.url;
+      } else {
+        console.error("Image upload failed:", data);
+        return null;
+      }
+    } catch (error) {
+      console.error("Image upload error:", error);
+      return null;
+    }
+  };
+
+  const handlePost = async () => {
+    if (!content.trim() && !image) {
+      alert("Please add some content or an image to your post");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Get current authenticated user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("Please log in to create a post");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Fetch the user's profile_id from profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id) // Changed from "user_id" to "id"
+        .single();
+
+      if (profileError || !profile) {
+        console.error("Profile error:", profileError);
+        alert("User profile not found. Cannot create post.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      let imageUrl = null;
+
+      // Upload image if present
+      if (image) {
+        console.log("Uploading image:", image.name, "Size:", image.size);
+        imageUrl = await uploadImageToImgBB(image);
+        console.log("Image uploaded, URL:", imageUrl);
+        if (!imageUrl) {
+          alert("Failed to upload image. Please try again.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Insert new post with correct profile_id
+      const { data: newPost, error } = await supabase
+        .from("posts")
+        .insert({
+          profile_id: profile.id, // use profile.id here, NOT user.id
+          content: content.trim(),
+          image_url: imageUrl,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          is_liked: false,
+        })
+        .select(
+          `
+        *,
+        profiles (
+          first_name,
+          last_name,
+          avatar_url,
+          job_title
+        )
+      `
+        )
+        .single();
+
+      if (error) {
+        console.error("Error creating post:", error);
+        alert("Failed to create post. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log("Post created successfully with data:", newPost);
+
+      // Reset form
+      setContent("");
+      removeImage();
+      setIsExpanded(false);
+
+      // Notify parent if needed
+      if (onPostCreated && newPost) {
+        onPostCreated(newPost as Post);
+      }
+
+      console.log("Post created successfully!");
+    } catch (error) {
+      console.error("Post creation error:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const userName =
+    userProfile?.first_name && userProfile?.last_name
+      ? `${userProfile.first_name} ${userProfile.last_name}`
+      : "User";
+
+  // Debug: Log computed values
+  console.log("CreatePost - userName:", userName);
+  console.log("CreatePost - avatar_url:", userProfile?.avatar_url);
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div className="flex space-x-3">
-        {userAvatar ? (
-          <Image
-            src={userAvatar}
-            alt={userName}
-            width={48}
-            height={48}
-            className="rounded-full"
-          />
-        ) : (
-          <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-            <span className="text-lg font-semibold text-gray-600">
-              {userName[0]}
-            </span>
-          </div>
-        )}
-        
+        <img
+          src={
+            userProfile?.avatar_url ||
+            "https://via.placeholder.com/48x48?text=" + (userName[0] || "U")
+          }
+          alt={userName}
+          className="w-12 h-12 rounded-full object-cover"
+        />
+
         <div className="flex-1">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onFocus={() => setIsExpanded(true)}
-            placeholder="What do you want to talk about?"
-            className="w-full resize-none border-none outline-none text-gray-700 placeholder-gray-500"
-            rows={isExpanded ? 4 : 1}
-          />
-          
-          {imagePreview && (
-            <div className="mt-3 relative">
-              <Image
-                src={imagePreview}
-                alt="Preview"
-                width={400}
-                height={300}
-                className="rounded-lg max-h-60 object-cover"
+          {!isExpanded ? (
+            <button
+              onClick={() => setIsExpanded(true)}
+              className="w-full text-left p-3 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+            >
+              What do you want to talk about?
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <RichTextEditor
+                content={content}
+                onChange={setContent}
+                placeholder="What do you want to talk about?"
               />
-              <button
-                onClick={removeImage}
-                className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white rounded-full p-1 hover:bg-opacity-100"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                </svg>
-              </button>
+
+              {/* Image Preview */}
+              {imagePreview && (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full max-h-96 object-cover rounded-lg"
+                  />
+                  <button
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 bg-gray-900 bg-opacity-70 text-white rounded-full p-1 hover:bg-opacity-90 transition-opacity"
+                    type="button"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
       {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex space-x-4">
-              <label className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 cursor-pointer">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                </svg>
+              <label className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors">
+                <ImageIcon size={20} />
                 <span className="text-sm">Photo</span>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
                   className="hidden"
+                  disabled={isSubmitting}
                 />
               </label>
 
-              <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z" />
-                </svg>
+              <button className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <Video size={20} />
                 <span className="text-sm">Video</span>
               </button>
 
-              <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
-                </svg>
+              <button className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <BarChart size={20} />
                 <span className="text-sm">Poll</span>
               </button>
 
-              <button className="flex items-center space-x-2 text-gray-600 hover:text-blue-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                </svg>
+              <button className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <Smile size={20} />
                 <span className="text-sm">Celebrate</span>
               </button>
             </div>
 
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => setIsExpanded(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                onClick={() => {
+                  setContent("");
+                  removeImage();
+                  setIsExpanded(false);
+                }}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                disabled={isSubmitting}
               >
                 Cancel
               </button>
-              <button
+              <FormButton
                 onClick={handlePost}
-                disabled={!content.trim() && !image}
-                className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={(!content.trim() && !image) || isSubmitting}
+                isLoading={isSubmitting}
               >
-                Post
-              </button>
+                {isSubmitting ? "Posting..." : "Post"}
+              </FormButton>
             </div>
           </div>
         </div>

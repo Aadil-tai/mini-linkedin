@@ -1,35 +1,99 @@
 // components/common/PostCard.tsx
 "use client";
 
-import { useState } from "react";
-import { Heart, MessageSquare, Share2, MoreHorizontal } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Heart,
+  MessageSquare,
+  Share2,
+  MoreHorizontal,
+  Trash2,
+} from "lucide-react";
+import { togglePostLike, deletePost } from "@/lib/superbase/postActions";
+import { supabase } from "@/lib/superbase/client";
 
 interface PostCardProps {
   post: {
     id: string;
-    user: {
-      name: string;
-      avatar: string;
-      title: string;
-    };
+    profile_id: string;
     content: string;
-    image?: string;
+    image_url?: string;
     likes: number;
     comments: number;
     shares: number;
-    createdAt: string;
-    isLiked: boolean;
+    is_liked: boolean;
+    created_at: string;
+    profiles?: {
+      first_name?: string;
+      last_name?: string;
+      avatar_url?: string;
+      job_title?: string;
+    };
   };
+  onPostDeleted?: (postId: string) => void;
 }
 
-export default function PostCard({ post }: PostCardProps) {
-  const [isLiked, setIsLiked] = useState(post.isLiked);
+export default function PostCard({ post, onPostDeleted }: PostCardProps) {
+  const [isLiked, setIsLiked] = useState(post.is_liked);
   const [likeCount, setLikeCount] = useState(post.likes);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+  // Debug: Log post data
+  console.log("PostCard rendering post:", post);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getUser();
+  }, []);
+
+  const handleLike = async () => {
+    try {
+      const newIsLiked = !isLiked;
+      const result = await togglePostLike(post.id, newIsLiked);
+      setIsLiked(result.is_liked);
+      setLikeCount(result.likes);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
   };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+
+    try {
+      setIsDeleting(true);
+      await deletePost(post.id);
+      onPostDeleted?.(post.id);
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Helper function to render rich text content
+  const renderContent = (content: string) => {
+    return (
+      <div
+        className="prose prose-sm max-w-none text-gray-800 dark:text-gray-200 dark:prose-invert"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
+  };
+
+  const authorName =
+    post.profiles?.first_name && post.profiles?.last_name
+      ? `${post.profiles.first_name} ${post.profiles.last_name}`
+      : "Anonymous User";
+  const authorAvatar = post.profiles?.avatar_url || "/default-avatar.png";
+  const authorTitle = post.profiles?.job_title || "User";
+  const isAuthor = currentUserId === post.profile_id;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">
@@ -37,38 +101,55 @@ export default function PostCard({ post }: PostCardProps) {
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-3">
           <img
-            src={post.user.avatar}
-            alt={post.user.name}
+            src={authorAvatar}
+            alt={authorName}
             className="w-12 h-12 rounded-full object-cover"
           />
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white">
-              {post.user.name}
+              {authorName}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {post.user.title}
+              {authorTitle}
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              {new Date(post.createdAt).toLocaleDateString("en-US", {
+              {new Date(post.created_at).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
               })}
             </p>
           </div>
         </div>
-        <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-          <MoreHorizontal size={18} />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <MoreHorizontal size={18} />
+          </button>
+          {isAuthor && (
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="text-red-500 hover:text-red-700 disabled:opacity-50"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Post Content */}
       <div className="mt-3">
-        <p className="text-gray-800 dark:text-gray-200">{post.content}</p>
-        {post.image && (
+        {renderContent(post.content)}
+        {post.image_url && (
           <img
-            src={post.image}
+            src={post.image_url}
             alt="Post"
             className="mt-3 w-full rounded-lg object-cover max-h-96"
+            onLoad={() =>
+              console.log("Image loaded successfully:", post.image_url)
+            }
+            onError={(e) =>
+              console.error("Image failed to load:", post.image_url, e)
+            }
           />
         )}
       </div>
