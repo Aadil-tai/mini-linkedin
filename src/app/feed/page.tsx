@@ -96,10 +96,10 @@ export default function FeedPage() {
           userProfile={
             userProfile
               ? {
-                  avatar_url: userProfile.avatar_url,
-                  first_name: userProfile.first_name,
-                  last_name: userProfile.last_name,
-                  job_title: userProfile.job_title,
+                  avatar_url: userProfile.avatar_url || undefined,
+                  first_name: userProfile.first_name || undefined,
+                  last_name: userProfile.last_name || undefined,
+                  job_title: userProfile.job_title || undefined,
                 }
               : undefined
           }
