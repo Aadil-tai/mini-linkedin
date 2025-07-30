@@ -20,9 +20,11 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ${
-        sidebarOpen ? "w-64" : "w-20"
-      }`}
+      className={`
+    bg-white dark:bg-gray-800 shadow-lg transition-all duration-300
+    ${sidebarOpen ? "w-64" : "w-20"}
+    hidden md:block /* Always hide on mobile, show on medium screens and up */
+  `}
     >
       {/* Sidebar Header - Logo Only */}
       <div className="p-4 flex justify-between items-center border-b dark:border-gray-700">

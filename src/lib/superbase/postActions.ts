@@ -25,6 +25,17 @@ export interface CreatePostData {
   image_url?: string;
 }
 
+export type PostFilterType = 'latest' | 'popular' | 'trending' | 'oldest';
+
+export interface PostFilters {
+  filter?: PostFilterType;
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
+  authorId?: string;
+}
+
 // Create a new post
 export async function createPost(data: CreatePostData) {
   const {
@@ -81,12 +92,12 @@ export async function createPost(data: CreatePostData) {
   return post;
 }
 
-// Get posts for feed (with pagination)
-export async function getPosts(page = 0, limit = 10) {
+// Get posts for feed (with pagination and filtering)
+export async function getPosts(page = 0, limit = 10, filters?: PostFilters) {
   const from = page * limit;
   const to = from + limit - 1;
 
-  const { data: posts, error } = await supabase
+  let query = supabase
     .from("posts")
     .select(`
       *,
@@ -98,9 +109,62 @@ export async function getPosts(page = 0, limit = 10) {
         avatar_url,
         job_title
       )
-    `)
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    `);
+
+  // Apply filters
+  if (filters) {
+    // Author filter
+    if (filters.authorId) {
+      query = query.eq("profile_id", filters.authorId);
+    }
+
+    // Date range filter
+    if (filters.dateRange) {
+      if (filters.dateRange.from) {
+        query = query.gte("created_at", filters.dateRange.from);
+      }
+      if (filters.dateRange.to) {
+        query = query.lte("created_at", filters.dateRange.to);
+      }
+    }
+
+    // Sorting based on filter type
+    switch (filters.filter) {
+      case 'latest':
+        query = query.order("created_at", { ascending: false });
+        break;
+      case 'oldest':
+        query = query.order("created_at", { ascending: true });
+        break;
+      case 'popular':
+        // Sort by likes count, then by creation date
+        query = query.order("likes", { ascending: false })
+                    .order("created_at", { ascending: false });
+        break;
+      case 'trending':
+        // Sort by engagement (likes + comments + shares), then by recent activity
+        // For trending, we prioritize posts with high engagement from the last 7 days
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        query = query.gte("created_at", sevenDaysAgo.toISOString())
+                    .order("likes", { ascending: false })
+                    .order("comments", { ascending: false })
+                    .order("shares", { ascending: false })
+                    .order("created_at", { ascending: false });
+        break;
+      default:
+        // Default to latest
+        query = query.order("created_at", { ascending: false });
+    }
+  } else {
+    // Default sorting - latest posts first
+    query = query.order("created_at", { ascending: false });
+  }
+
+  // Apply pagination
+  query = query.range(from, to);
+
+  const { data: posts, error } = await query;
 
   if (error) {
     console.error("Error fetching posts:", error);
@@ -212,4 +276,189 @@ export async function getPost(postId: string) {
   }
 
   return post as Post;
+}
+
+// Get latest posts (server action)
+export async function getLatestPosts(page = 0, limit = 10) {
+  return getPosts(page, limit, { filter: 'latest' });
+}
+
+// Get popular posts (server action)
+export async function getPopularPosts(page = 0, limit = 10) {
+  return getPosts(page, limit, { filter: 'popular' });
+}
+
+// Get trending posts (server action)
+export async function getTrendingPosts(page = 0, limit = 10) {
+  return getPosts(page, limit, { filter: 'trending' });
+}
+
+// Get oldest posts (server action)
+export async function getOldestPosts(page = 0, limit = 10) {
+  return getPosts(page, limit, { filter: 'oldest' });
+}
+
+// Get posts by date range (server action)
+export async function getPostsByDateRange(
+  from: string,
+  to: string,
+  page = 0,
+  limit = 10
+) {
+  return getPosts(page, limit, {
+    filter: 'latest',
+    dateRange: { from, to }
+  });
+}
+
+// Get posts by author (server action)
+export async function getPostsByAuthor(
+  authorId: string,
+  page = 0,
+  limit = 10,
+  filter: PostFilterType = 'latest'
+) {
+  return getPosts(page, limit, {
+    filter,
+    authorId
+  });
+}
+
+// Get recent posts for sidebar (server action)
+export async function getRecentPostsForSidebar(limit = 5) {
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select(`
+      id,
+      content,
+      created_at,
+      profiles!posts_profile_id_fkey (
+        first_name,
+        last_name,
+        avatar_url
+      )
+    `)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching recent posts for sidebar:", error);
+    throw error;
+  }
+
+  return posts;
+}
+
+// Advanced filtering function for complex queries (server action)
+export async function getFilteredPosts(options: {
+  page?: number;
+  limit?: number;
+  filter?: PostFilterType;
+  search?: string;
+  minLikes?: number;
+  maxLikes?: number;
+  authorIds?: string[];
+  excludeAuthorIds?: string[];
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
+  tags?: string[];
+}) {
+  const {
+    page = 0,
+    limit = 10,
+    filter = 'latest',
+    search,
+    minLikes,
+    maxLikes,
+    authorIds,
+    excludeAuthorIds,
+    dateRange,
+  } = options;
+
+  const from = page * limit;
+  const to = from + limit - 1;
+
+  let query = supabase
+    .from("posts")
+    .select(`
+      *,
+      profiles!posts_profile_id_fkey (
+        id,
+        user_id,
+        first_name,
+        last_name,
+        avatar_url,
+        job_title
+      )
+    `);
+
+  // Text search in content
+  if (search) {
+    query = query.ilike("content", `%${search}%`);
+  }
+
+  // Likes range filter
+  if (minLikes !== undefined) {
+    query = query.gte("likes", minLikes);
+  }
+  if (maxLikes !== undefined) {
+    query = query.lte("likes", maxLikes);
+  }
+
+  // Author filters
+  if (authorIds && authorIds.length > 0) {
+    query = query.in("profile_id", authorIds);
+  }
+  if (excludeAuthorIds && excludeAuthorIds.length > 0) {
+    query = query.not("profile_id", "in", `(${excludeAuthorIds.join(",")})`);
+  }
+
+  // Date range filter
+  if (dateRange) {
+    if (dateRange.from) {
+      query = query.gte("created_at", dateRange.from);
+    }
+    if (dateRange.to) {
+      query = query.lte("created_at", dateRange.to);
+    }
+  }
+
+  // Apply sorting based on filter type
+  switch (filter) {
+    case 'latest':
+      query = query.order("created_at", { ascending: false });
+      break;
+    case 'oldest':
+      query = query.order("created_at", { ascending: true });
+      break;
+    case 'popular':
+      query = query.order("likes", { ascending: false })
+                  .order("created_at", { ascending: false });
+      break;
+    case 'trending':
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      query = query.gte("created_at", sevenDaysAgo.toISOString())
+                  .order("likes", { ascending: false })
+                  .order("comments", { ascending: false })
+                  .order("shares", { ascending: false })
+                  .order("created_at", { ascending: false });
+      break;
+    default:
+      query = query.order("created_at", { ascending: false });
+  }
+
+  // Apply pagination
+  query = query.range(from, to);
+
+  const { data: posts, error } = await query;
+
+  if (error) {
+    console.error("Error fetching filtered posts:", error);
+    throw error;
+  }
+
+  return posts as Post[];
 }

@@ -4,7 +4,8 @@ import { useState, useCallback, useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import PostCard from "@/components/common/PostCard";
 import CreatePost from "@/components/feed/CreatePost";
-import { getPosts } from "@/lib/superbase/postActions";
+import PostFilters from "@/components/feed/PostFilters";
+import { getPosts, PostFilterType } from "@/lib/superbase/postActions";
 import { useProfile } from "@/hooks/userProfile";
 import type { Post } from "@/lib/superbase/postActions";
 
@@ -14,6 +15,7 @@ export default function FeedPage() {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<PostFilterType>("latest");
 
   // Get current user's profile
   const {
@@ -30,12 +32,12 @@ export default function FeedPage() {
   // Load initial posts
   useEffect(() => {
     loadInitialPosts();
-  }, []);
+  }, [activeFilter]); // Reload when filter changes
 
   const loadInitialPosts = async () => {
     try {
       setInitialLoading(true);
-      const initialPosts = await getPosts(0, 10);
+      const initialPosts = await getPosts(0, 10, { filter: activeFilter });
       setPosts(initialPosts);
       setPage(0);
       setHasMore(initialPosts.length === 10);
@@ -52,7 +54,7 @@ export default function FeedPage() {
     try {
       setLoading(true);
       const nextPage = page + 1;
-      const newPosts = await getPosts(nextPage, 10);
+      const newPosts = await getPosts(nextPage, 10, { filter: activeFilter });
 
       if (newPosts.length === 0) {
         setHasMore(false);
@@ -67,7 +69,7 @@ export default function FeedPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, loading]);
+  }, [page, loading, activeFilter]);
 
   const handleNewPost = (newPost: Post) => {
     setPosts((prev) => [newPost, ...prev]);
@@ -75,6 +77,13 @@ export default function FeedPage() {
 
   const handlePostDeleted = (deletedPostId: string) => {
     setPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
+  };
+
+  const handleFilterChange = (filter: PostFilterType) => {
+    setActiveFilter(filter);
+    setPosts([]); // Clear existing posts
+    setPage(0);
+    setHasMore(true);
   };
 
   if (initialLoading) {
@@ -88,11 +97,17 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
+    <div className="max-w-3xl mx-auto lg:p-4">
       {/* Create Post Section */}
       <div className="mb-6">
         <CreatePost onPostCreated={handleNewPost} />
       </div>
+
+      {/* Post Filters */}
+      <PostFilters
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+      />
 
       {/* Posts Feed */}
       <InfiniteScroll

@@ -22,10 +22,6 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
   // Use the useProfile hook to get current user's profile
   const { profile, user, loading, error } = useProfile();
 
-  // Debug: Log profile data
-  console.log("CreatePost - profile from hook:", profile);
-  console.log("CreatePost - user from hook:", user);
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -164,8 +160,6 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
         return;
       }
 
-      console.log("Post created successfully with data:", newPost);
-
       // Reset form
       setContent("");
       removeImage();
@@ -175,10 +169,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
       if (onPostCreated && newPost) {
         onPostCreated(newPost as Post);
       }
-
-      console.log("Post created successfully!");
     } catch (error) {
-      console.error("Post creation error:", error);
       alert("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -203,18 +194,14 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
       .slice(0, 2);
   };
 
-  // Debug: Log computed values
-  console.log("CreatePost - userName:", userName);
-  console.log("CreatePost - avatar_url:", profile?.avatar_url);
-
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
-      <div className="flex space-x-3">
+      <div className="flex flex-col md:flex-row space-x-3">
         {profile?.avatar_url ? (
           <img
             src={profile.avatar_url}
             alt={userName}
-            className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
+            className="w-6 h-6 lg:w-12 lg:h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
             onError={(e) => {
               console.error(
                 "Failed to load profile image:",
@@ -234,7 +221,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
           {!isExpanded ? (
             <button
               onClick={() => setIsExpanded(true)}
-              className="w-full text-left p-3 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+              className="w-full text-[8px] md:text-[12px] text-left p-2 md:p-3 border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
             >
               What do you want to talk about?
             </button>
