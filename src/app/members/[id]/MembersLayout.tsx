@@ -4,7 +4,7 @@ import { ThemeProvider } from "next-themes";
 import Sidebar from "@/components/common/sideBar";
 import Header from "@/components/common/Header";
 
-export default function OnboardingLayout({
+export default function MemberProfileLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -1,7 +1,7 @@
 "use client";
 
+import { GoogleButton } from "@/components/common/GoogleButton";
 import Link from "next/link";
-import { GoogleButton } from "./components/common/GoogleButton";
 
 export default function HomePage() {
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { supabase } from "@/app/lib/superbase/client";
+import { supabase } from "@/lib/superbase/client";
 
 export function GoogleButton({
   text = "Continue with Google",

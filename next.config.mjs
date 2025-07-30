@@ -19,8 +19,21 @@ const nextConfig = {
             },
         ],
     },
-
+    // Reduce development server logging
+    logging: {
+        fetches: {
+            fullUrl: false,
+        },
+    },
+    // Suppress warnings and reduce webpack logging
+    webpack: (config, { dev, isServer }) => {
+        if (dev) {
+            config.infrastructureLogging = {
+                level: 'error',
+            };
+        }
+        return config;
+    },
 };
 
 export default nextConfig;
-

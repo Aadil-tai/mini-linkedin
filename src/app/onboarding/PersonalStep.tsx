@@ -7,8 +7,8 @@ import { Control, FieldErrors, UseFormRegister } from "react-hook-form";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
-import { FormInput } from "../components/forms/FormInput";
-import { OnboardingFormSchema } from "../lib/schema/onboardingSchema";
+import { FormInput } from "@/components/forms/FormInput";
+import { OnboardingFormSchema } from "@/lib/schema/onboardingSchema";
 
 interface PersonalStepProps {
   control: Control<OnboardingFormSchema>;

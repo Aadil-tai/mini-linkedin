@@ -12,5 +12,5 @@ export async function GET(request: Request) {
   }
 
   // Redirect to feed page after successful authentication
-  return NextResponse.redirect(`${requestUrl.origin}/feed`);
+  return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { FormInput } from "../components/forms/FormInput";
-import { OnboardingFormSchema } from "../lib/schema/onboardingSchema";
+import { FormInput } from "@/components/forms/FormInput";
+import { OnboardingFormSchema } from "@/lib/schema/onboardingSchema";
 import { Control, FieldErrors, UseFormRegister } from "react-hook-form";
 
 interface CompanyStepProps {

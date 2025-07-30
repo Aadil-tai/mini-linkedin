@@ -9,14 +9,14 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import {
-  onboardingSchema,
-  OnboardingFormSchema,
-} from "../lib/schema/onboardingSchema";
 import { CompanyStep } from "./CompanyStep";
 import { ProfessionalStep } from "./ProfessionalStep";
 import { PersonalStep } from "./PersonalStep";
-import { FormButton } from "../components/forms/FormButton";
+import {
+  OnboardingFormSchema,
+  onboardingSchema,
+} from "@/lib/schema/onboardingSchema";
+import { FormButton } from "@/components/forms/FormButton";
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);

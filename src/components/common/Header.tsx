@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { supabase } from "@/app/lib/superbase/client";
 import ThemeToggle from "./ThemeToggle";
+import { supabase } from "@/lib/superbase/client";
 
 interface User {
   id: string;

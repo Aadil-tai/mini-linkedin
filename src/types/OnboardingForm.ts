@@ -15,7 +15,7 @@ export const CompanySize = {
   Medium: "Medium",
   Large: "Large",
 } as const;
-export type CompanySize = typeof CompanySize[keyof typeof CompanySize];
+export type CompanySize = (typeof CompanySize)[keyof typeof CompanySize];
 
 // Core domain types
 export type PersonalDetails = {
@@ -55,7 +55,7 @@ export type FormStepProps<T extends FormData = FormData> = {
 };
 
 // Extended form utilities
-export type EnhancedFormStepProps<T extends FormData = FormData> = 
+export type EnhancedFormStepProps<T extends FormData = FormData> =
   FormStepProps<T> & {
     getValues: UseFormGetValues<T>;
     formState: UseFormStateReturn<T>;
