@@ -6,6 +6,7 @@ import ThemeToggle from "./ThemeToggle";
 import SearchResults from "./SearchResults";
 import { supabase } from "@/lib/superbase/client";
 import { performSearch, SearchResult } from "@/lib/superbase/searchActions";
+import { clearProfileCompleteCookieClient } from "@/lib/utils";
 
 interface User {
   id: string;
@@ -95,9 +96,22 @@ export default function Header() {
   }, [searchQuery]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push("/(auth)/login");
-    setShowDropdown(false);
+    try {
+      // Clear the profile completion cookie
+      clearProfileCompleteCookieClient();
+
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+
+      // Redirect to login page
+      router.push("/(auth)/login");
+      setShowDropdown(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+      // Still close dropdown and redirect even if there's an error
+      setShowDropdown(false);
+      router.push("/(auth)/login");
+    }
   };
 
   const navigationItems = [

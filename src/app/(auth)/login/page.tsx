@@ -8,6 +8,10 @@ import { FormInput } from "@/components/forms/FormInput";
 import { FormButton } from "@/components/forms/FormButton";
 import { GoogleButton } from "@/components/common/GoogleButton";
 import { LoginFormData, loginSchema } from "@/lib/validation/auth";
+import {
+  getProfileCompleteCookieClient,
+  setProfileCompleteCookieClient,
+} from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,13 +26,39 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
       if (error) throw error;
-      router.replace("/feed");
+
+      // Check if user has completed profile
+      if (authData.user) {
+        // Check cookie first for faster response
+        const hasProfileCookie = getProfileCompleteCookieClient();
+
+        if (hasProfileCookie) {
+          router.replace("/feed");
+          return;
+        }
+
+        // If no cookie, check database
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", authData.user.id)
+          .single();
+
+        if (profile && !profileError) {
+          // User has profile, set cookie and redirect to feed
+          setProfileCompleteCookieClient();
+          router.replace("/feed");
+        } else {
+          // User doesn't have profile, redirect to onboarding
+          router.replace("/onboarding");
+        }
+      }
     } catch (error) {
       setError("root", {
         type: "manual",
@@ -111,7 +141,7 @@ export default function LoginPage() {
         <div className="text-center text-sm text-gray-600 dark:text-gray-400">
           Don't have an account?{" "}
           <Link
-            href="/sign-up"
+            href="sign-up"
             className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
           >
             Sign up

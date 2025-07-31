@@ -38,10 +38,26 @@ export default function SignUpPage() {
 
       // Don't redirect immediately - wait for email verification
       setIsEmailSent(true);
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = "Sign up failed. Please try again.";
+
+      // Handle specific error cases
+      if (error?.message) {
+        if (error.message.includes("User already registered")) {
+          errorMessage =
+            "An account with this email already exists. Please sign in instead.";
+        } else if (error.message.includes("email address")) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (error.message.includes("password")) {
+          errorMessage = "Password doesn't meet the requirements.";
+        } else if (error.message.includes("rate limit")) {
+          errorMessage = "Too many signup attempts. Please try again later.";
+        }
+      }
+
       setError("root", {
         type: "manual",
-        message: "Sign up failed. Please try again.",
+        message: errorMessage,
       });
     }
   };
@@ -87,9 +103,21 @@ export default function SignUpPage() {
                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className="text-sm text-red-700 dark:text-red-300 font-medium">
-                    {errors.root.message}
-                  </span>
+                  <div className="flex-1">
+                    <span className="text-sm text-red-700 dark:text-red-300 font-medium">
+                      {errors.root.message}
+                    </span>
+                    {errors.root.message?.includes("already exists") && (
+                      <div className="mt-1">
+                        <Link
+                          href="login"
+                          className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 underline"
+                        >
+                          Sign in to your existing account
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -257,7 +285,7 @@ export default function SignUpPage() {
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Already on Mini-LinkedIn?{" "}
                     <Link
-                      href="/(auth)/login"
+                      href="login"
                       className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors hover:underline"
                     >
                       Sign in
