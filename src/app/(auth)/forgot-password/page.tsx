@@ -11,7 +11,7 @@ import { FormInput } from "@/components/forms/FormInput";
 import { FormButton } from "@/components/forms/FormButton";
 import { PasswordResetForm } from "@/components/auth/PasswordResetForm";
 
-// Validation schema for forgot password
+// ✅ Zod schema for form validation
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
 });
@@ -33,22 +33,20 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  /**
-   * Step 2: Handle password recovery when user comes back from email link
-   * This effect listens for the PASSWORD_RECOVERY event and shows password reset form
-   */
+  // ✅ Step 2: Listen for PASSWORD_RECOVERY event
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event) => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setShowPasswordReset(true);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      data.subscription.unsubscribe();
+    };
   }, []);
 
+  // ✅ Password reset success & cancel
   const handlePasswordResetSuccess = () => {
     setShowPasswordReset(false);
     alert("Password updated successfully!");
@@ -59,33 +57,77 @@ export default function ForgotPasswordPage() {
     setShowPasswordReset(false);
   };
 
-  /**
-   * Step 1: Send the user an email to get a password reset token.
-   * This email contains a link which sends the user back to your application.
-   */
+  // ✅ Step 1: Send reset email using Supabase built-in service
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
+      const redirectUrl =
+        process.env.NODE_ENV === "production"
+          ? "https://mini-linkedin.vercel.app/(auth)/forgot-password"
+          : `${window.location.origin}/(auth)/forgot-password`;
+
+      console.log("Attempting to send reset email to:", data.email);
+      console.log("Redirect URL:", redirectUrl);
+
+      // TEMPORARY: Skip email for testing (remove this in production)
+      if (
+        process.env.NODE_ENV === "development" &&
+        data.email === "test@example.com"
+      ) {
+        console.log("🧪 TEST MODE: Skipping actual email send");
+        setIsEmailSent(true);
+        setMessage(
+          `TEST MODE: Password reset would be sent to ${data.email}. Check Supabase Dashboard to fix email configuration.`
+        );
+        return;
+      }
+
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/forgot-password`,
+        redirectTo: redirectUrl,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase reset email error:", error);
+        throw error;
+      }
 
+      console.log("Reset email sent successfully");
+
+      // ✅ Always show success message for security
       setIsEmailSent(true);
       setMessage(
-        `Password reset instructions have been sent to ${data.email}. Please check your email and follow the link to reset your password.`
+        `If an account with ${data.email} exists, we've sent password reset instructions. Please check your email (including spam folder).`
       );
-    } catch (error: unknown) {
-      setError("root", {
-        type: "manual",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to send reset email. Please try again.",
-      });
+    } catch (err: unknown) {
+      console.error("Full error details:", err);
+
+      let errorMessage = "Failed to send reset email. Please try again.";
+
+      if (err instanceof Error) {
+        // Provide more specific error messages
+        if (err.message.includes("rate limit")) {
+          errorMessage =
+            "Too many reset attempts. Please wait before trying again.";
+        } else if (err.message.includes("Invalid email")) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (
+          err.message.includes("network") ||
+          err.message.includes("fetch")
+        ) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        } else if (err.message.includes("Error sending recovery email")) {
+          errorMessage =
+            "⚠️ Email service configuration issue. Please contact support or try again later.";
+        } else {
+          errorMessage = `Error: ${err.message}`;
+        }
+      }
+
+      setError("root", { type: "manual", message: errorMessage });
     }
   };
 
+  // ✅ Show confirmation screen after sending email
   if (isEmailSent) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -127,6 +169,7 @@ export default function ForgotPasswordPage() {
     );
   }
 
+  // ✅ Default Forgot Password Form
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow dark:bg-gray-800">
@@ -143,6 +186,31 @@ export default function ForgotPasswordPage() {
         {errors.root && (
           <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900 dark:text-red-100">
             {errors.root.message}
+
+            {/* Show helpful debugging info for email configuration issues */}
+            {errors.root.message?.includes("Email service configuration") && (
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer font-medium">
+                  🔧 Troubleshooting Steps
+                </summary>
+                <div className="mt-2 bg-red-50 dark:bg-red-800/50 p-2 rounded">
+                  <p className="font-medium mb-1">Check Supabase Dashboard:</p>
+                  <ul className="list-disc ml-4 space-y-1">
+                    <li>Go to Authentication → Settings → SMTP Settings</li>
+                    <li>
+                      Either disable custom SMTP (use Supabase built-in) OR
+                    </li>
+                    <li>Configure your SMTP provider properly</li>
+                    <li>Check Email Templates have correct redirect URLs</li>
+                    <li>Verify sender email is authenticated</li>
+                  </ul>
+                  <p className="mt-2 text-yellow-700 dark:text-yellow-300">
+                    💡 Tip: Try disabling custom SMTP first to use Supabase's
+                    built-in email service
+                  </p>
+                </div>
+              </details>
+            )}
           </div>
         )}
 
@@ -163,7 +231,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center text-sm text-gray-600 dark:text-gray-400">
           Remember your password?{" "}
           <Link
-            href="/(auth)/login"
+            href="/login"
             className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
           >
             Sign in
@@ -171,38 +239,13 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
 
-      {/* Password Reset Form Modal */}
+      {/* ✅ Password Reset Form when user clicks email link */}
       {showPasswordReset && (
         <PasswordResetForm
           onSuccess={handlePasswordResetSuccess}
           onCancel={handlePasswordResetCancel}
         />
       )}
-
-      {/* Developer Reference Section - Remove in production */}
-      <div className=" hidden mt-8 w-full max-w-md p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-          🔧 Developer Reference - Password Reset Implementation
-        </h3>
-        <div className="text-xs text-gray-600 dark:text-gray-400 space-y-2">
-          <p>
-            <strong>Step 1:</strong> Send reset email with{" "}
-            <code>resetPasswordForEmail()</code>
-          </p>
-          <p>
-            <strong>Step 2:</strong> Listen for <code>PASSWORD_RECOVERY</code>{" "}
-            event in <code>onAuthStateChange</code>
-          </p>
-          <p>
-            <strong>Step 3:</strong> Update password with{" "}
-            <code>updateUser()</code>
-          </p>
-          <p className="text-yellow-600 dark:text-yellow-400">
-            Note: In production, replace the prompt() with a proper password
-            form.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

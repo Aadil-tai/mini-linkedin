@@ -24,7 +24,7 @@ export default function SignUpPage() {
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpResult, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -44,6 +44,7 @@ export default function SignUpPage() {
       // Handle specific error cases
       if (error && typeof error === "object" && "message" in error) {
         const errorWithMessage = error as { message: string };
+
         if (errorWithMessage.message.includes("User already registered")) {
           errorMessage =
             "An account with this email already exists. Please sign in instead.";
@@ -53,6 +54,14 @@ export default function SignUpPage() {
           errorMessage = "Password doesn't meet the requirements.";
         } else if (errorWithMessage.message.includes("rate limit")) {
           errorMessage = "Too many signup attempts. Please try again later.";
+        } else if (errorWithMessage.message.includes("Email not confirmed")) {
+          errorMessage =
+            "Please check your email and click the verification link.";
+        } else if (errorWithMessage.message.includes("Invalid email")) {
+          errorMessage = "Please enter a valid email address.";
+        } else {
+          // Show the actual error message for debugging on Vercel
+          errorMessage = `Signup failed: ${errorWithMessage.message}`;
         }
       }
 
@@ -108,6 +117,21 @@ export default function SignUpPage() {
                     <span className="text-sm text-red-700 dark:text-red-300 font-medium">
                       {errors.root.message}
                     </span>
+                    {/* Show additional debug info on production */}
+                    {process.env.NODE_ENV === "production" &&
+                      errors.root.message?.includes("Signup failed:") && (
+                        <div className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/50 p-2 rounded">
+                          <strong>Debug Info:</strong> If you see this error,
+                          please check:
+                          <br />
+                          1. Your email is valid
+                          <br />
+                          2. Password meets requirements (8+ chars, uppercase,
+                          lowercase, number, special char)
+                          <br />
+                          3. Supabase site URL is configured correctly
+                        </div>
+                      )}
                     {errors.root.message?.includes("already exists") && (
                       <div className="mt-1">
                         <Link
