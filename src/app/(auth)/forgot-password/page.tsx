@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
   const handlePasswordResetSuccess = () => {
     setShowPasswordReset(false);
     alert("Password updated successfully!");
-    router.push("/(auth)/login");
+    router.push("/login");
   };
 
   const handlePasswordResetCancel = () => {
@@ -66,7 +66,7 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/(auth)/forgot-password`,
+        redirectTo: `${window.location.origin}/forgot-password`,
       });
 
       if (error) throw error;
@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
 
           <div className="space-y-4">
             <Link
-              href="/(auth)/login"
+              href="/login"
               className="w-full inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Back to Sign In
