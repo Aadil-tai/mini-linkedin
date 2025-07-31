@@ -135,8 +135,6 @@ export default function OnboardingPage() {
       if (isStepValid) {
         setCompletedSteps((prev) => [...prev.filter((s) => s !== step), step]);
         setStep((prev) => Math.min(prev + 1, 3));
-      } else {
-        console.log("Validation failed. Current errors:", errors);
       }
     }
   };
@@ -144,7 +142,6 @@ export default function OnboardingPage() {
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
   const onSubmit = async (data: OnboardingFormSchema) => {
-    console.log("Form submission started with data:", data);
     setIsSubmitting(true);
 
     try {
@@ -153,20 +150,16 @@ export default function OnboardingPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        console.error("No authenticated user found");
         return;
       }
 
       const error = await updateProfile(user.id, data);
 
       if (error) {
-        console.error("Profile update error:", error);
       } else {
-        console.log("Profile updated successfully");
         router.replace("/feed");
       }
     } catch (err) {
-      console.error("Submission error:", err);
     } finally {
       setIsSubmitting(false);
     }

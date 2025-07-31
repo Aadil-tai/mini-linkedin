@@ -116,9 +116,8 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
 
       // Upload image if present
       if (image) {
-        console.log("Uploading image:", image.name, "Size:", image.size);
         imageUrl = await uploadImageToImgBB(image);
-        console.log("Image uploaded, URL:", imageUrl);
+
         if (!imageUrl) {
           alert("Failed to upload image. Please try again.");
           setIsSubmitting(false);

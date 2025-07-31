@@ -46,8 +46,7 @@ export async function createPost(data: CreatePostData) {
     throw new Error("User not authenticated");
   }
 
-  console.log("Creating post for user:", user.id);
-  console.log("Post data:", data);
+ 
 
   // First, check if user has a profile using user_id
   const { data: profile, error: profileError } = await supabase
@@ -88,7 +87,7 @@ export async function createPost(data: CreatePostData) {
     throw error;
   }
 
-  console.log("Post created successfully:", post);
+ 
   return post;
 }
 
@@ -171,7 +170,7 @@ export async function getPosts(page = 0, limit = 10, filters?: PostFilters) {
     throw error;
   }
 
-  console.log("Fetched posts with profiles:", posts);
+ 
   return posts as Post[];
 }
 

@@ -6,16 +6,15 @@ export async function updateProfile(
   user_id: string,
   formData: OnboardingFormSchema
 ) {
-  console.log("updateProfile called with:", { user_id, formData });
-
+ 
   // First, check if profile exists
-  const { data: existingProfile, error: fetchError } = await supabase
+  const { error: fetchError } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user_id)
     .single();
 
-  console.log("Existing profile check:", { existingProfile, fetchError });
+ 
 
   // Map form data to your database columns
   const updateData = {
@@ -35,11 +34,9 @@ export async function updateProfile(
     updated_at: new Date().toISOString(),
   };
 
-  console.log("Update data:", updateData);
 
   // If profile doesn't exist, create it
   if (fetchError && fetchError.code === 'PGRST116') {
-    console.log("Profile doesn't exist, creating new one...");
     const { error: insertError } = await supabase
       .from("profiles")
       .insert({
@@ -49,7 +46,6 @@ export async function updateProfile(
         created_at: new Date().toISOString(),
       });
     
-    console.log("Insert result:", { insertError });
     return insertError;
   }
 
@@ -59,6 +55,5 @@ export async function updateProfile(
     .update(updateData)
     .eq("id", user_id);
 
-  console.log("Update result:", { updateError });
   return updateError;
 }

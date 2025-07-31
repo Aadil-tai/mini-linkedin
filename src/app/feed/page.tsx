@@ -6,7 +6,6 @@ import PostCard from "@/components/common/PostCard";
 import CreatePost from "@/components/feed/CreatePost";
 import PostFilters from "@/components/feed/PostFilters";
 import { getPosts, PostFilterType } from "@/lib/superbase/postActions";
-import { useProfile } from "@/hooks/userProfile";
 import type { Post } from "@/lib/superbase/postActions";
 
 export default function FeedPage() {
@@ -16,18 +15,6 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<PostFilterType>("latest");
-
-  // Get current user's profile
-  const {
-    profile: userProfile,
-    loading: profileLoading,
-    error: profileError,
-  } = useProfile();
-
-  // Debug: Log profile data
-  console.log("Feed page - userProfile:", userProfile);
-  console.log("Feed page - profileLoading:", profileLoading);
-  console.log("Feed page - profileError:", profileError);
 
   // Load initial posts
   useEffect(() => {
@@ -42,7 +29,6 @@ export default function FeedPage() {
       setPage(0);
       setHasMore(initialPosts.length === 10);
     } catch (error) {
-      console.error("Error loading initial posts:", error);
     } finally {
       setInitialLoading(false);
     }
@@ -65,7 +51,6 @@ export default function FeedPage() {
       setPage(nextPage);
       setHasMore(newPosts.length === 10);
     } catch (error) {
-      console.error("Error loading more posts:", error);
     } finally {
       setLoading(false);
     }

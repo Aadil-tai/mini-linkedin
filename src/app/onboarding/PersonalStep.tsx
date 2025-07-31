@@ -116,11 +116,9 @@ export function PersonalStep({
         setPreviewUrl(imageUrl);
         onChange(imageUrl);
       } else {
-        console.error("Image upload did not succeed", data);
         alert("Image upload failed. Please try again.");
       }
     } catch (err) {
-      console.error("Image upload failed", err);
       alert("Image upload failed. Please try again.");
     } finally {
       setUploading(false);

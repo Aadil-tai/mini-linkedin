@@ -41,11 +41,6 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Debug: Log post data
-  console.log("PostCard rendering post:", post);
-  console.log("Profile data:", post.profiles);
-  console.log("Avatar URL:", post.profiles?.avatar_url);
-
   useEffect(() => {
     const getUser = async () => {
       const {
@@ -178,12 +173,6 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
             src={post.image_url}
             alt="Post"
             className="mt-3 w-full rounded-lg object-cover max-h-96"
-            onLoad={() =>
-              console.log("Image loaded successfully:", post.image_url)
-            }
-            onError={(e) =>
-              console.error("Image failed to load:", post.image_url, e)
-            }
           />
         )}
       </div>

@@ -53,13 +53,10 @@ export function useProfile(userId?: string) {
             .eq("user_id", targetUserId)
             .single();
 
-          console.log("useProfile hook - query result:", { profileData, profileError });
-
           if (profileError && profileError.code !== 'PGRST116') {
             throw profileError;
           }
 
-          console.log("useProfile hook - setting profile:", profileData);
           setProfile(profileData);
         }
       } catch (err) {
