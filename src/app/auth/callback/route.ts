@@ -8,9 +8,14 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (error) {
+      // If there's an error, redirect to login with error
+      return NextResponse.redirect(`${requestUrl.origin}/(auth)/login?error=auth_error`);
+    }
   }
 
-  // Redirect to feed page after successful authentication
+  // Redirect to onboarding page after successful email verification
   return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
 }
