@@ -129,7 +129,9 @@ export default function OnboardingPage() {
     }[step];
 
     if (fields) {
-      const isStepValid = await trigger(fields as any);
+      const isStepValid = await trigger(
+        fields as (keyof OnboardingFormSchema)[]
+      );
       if (isStepValid) {
         setCompletedSteps((prev) => [...prev.filter((s) => s !== step), step]);
         setStep((prev) => Math.min(prev + 1, 3));

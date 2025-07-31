@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === "PASSWORD_RECOVERY") {
         setShowPasswordReset(true);
       }
@@ -75,11 +75,13 @@ export default function ForgotPasswordPage() {
       setMessage(
         `Password reset instructions have been sent to ${data.email}. Please check your email and follow the link to reset your password.`
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError("root", {
         type: "manual",
         message:
-          error.message || "Failed to send reset email. Please try again.",
+          error instanceof Error
+            ? error.message
+            : "Failed to send reset email. Please try again.",
       });
     }
   };

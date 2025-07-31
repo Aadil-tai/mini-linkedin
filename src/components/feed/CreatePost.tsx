@@ -20,7 +20,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Use the useProfile hook to get current user's profile
-  const { profile, user, loading, error } = useProfile();
+  const { profile, user } = useProfile();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

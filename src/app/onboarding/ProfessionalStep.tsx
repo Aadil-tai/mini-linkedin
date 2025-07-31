@@ -147,7 +147,7 @@ export const ProfessionalStep = ({
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {skills.map((skill, index) => (
+              {skills.map((skill) => (
                 <div
                   key={skill}
                   className="group relative inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-800 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-700/50 hover:from-emerald-200 hover:to-teal-200 dark:hover:from-emerald-800/40 dark:hover:to-teal-800/40 transition-all duration-200 hover:scale-105"

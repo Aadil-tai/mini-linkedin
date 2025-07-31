@@ -63,4 +63,4 @@ export type EnhancedFormStepProps<T extends FormData = FormData> =
   };
 
 // Helper type for components with form methods
-export type WithFormMethods<T extends FormData, P = {}> = P & FormStepProps<T>;
+export type WithFormMethods<T extends FormData, P = Record<string, never>> = P & FormStepProps<T>;

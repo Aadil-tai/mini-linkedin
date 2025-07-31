@@ -19,14 +19,12 @@ interface PostProps {
 }
 
 export default function Post({
-  id,
   author,
   content,
   image,
   createdAt,
   likes,
   comments,
-  shares,
   isLiked = false,
 }: PostProps) {
   const [liked, setLiked] = useState(isLiked);

@@ -32,7 +32,6 @@ export function PersonalStep({
   photo,
   watch,
 }: PersonalStepProps) {
-  const [phone, setPhone] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -234,7 +233,6 @@ export function PersonalStep({
               value={field.value}
               onChange={(value) => {
                 field.onChange(value);
-                setPhone(value);
               }}
               inputProps={{
                 name: field.name,

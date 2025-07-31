@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/superbase/client";
@@ -51,11 +49,13 @@ export function PasswordResetForm({
       if (error) throw error;
 
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError("root", {
         type: "manual",
         message:
-          error.message || "Failed to update password. Please try again.",
+          error instanceof Error
+            ? error.message
+            : "Failed to update password. Please try again.",
       });
     }
   };

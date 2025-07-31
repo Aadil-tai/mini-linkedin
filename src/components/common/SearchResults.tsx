@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, User, FileText, Hash, Clock } from "lucide-react";
 import { SearchResult } from "@/lib/superbase/searchActions";

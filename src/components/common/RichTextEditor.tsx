@@ -12,7 +12,6 @@ import {
   ListOrdered,
   Link as LinkIcon,
   ImageIcon,
-  Type,
 } from "lucide-react";
 
 interface RichTextEditorProps {

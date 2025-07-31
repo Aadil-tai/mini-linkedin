@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/superbase/client";
 import { useState, useEffect } from "react";
+import { User } from "@supabase/supabase-js";
 
 export interface ProfileData {
   id: string;
@@ -24,7 +25,7 @@ export interface ProfileData {
 
 export function useProfile(userId?: string) {
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

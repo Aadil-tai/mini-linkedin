@@ -47,7 +47,7 @@ export default function MemberPage() {
     async function fetchMemberProfile() {
       try {
         // First try to get by profile ID
-        let query = supabase
+        const query = supabase
           .from("profiles")
           .select("*")
           .eq("id", memberId)
