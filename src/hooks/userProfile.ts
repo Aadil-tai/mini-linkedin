@@ -34,7 +34,6 @@ export function useProfile(userId?: string) {
       try {
         setLoading(true);
 
-        // Get current user first
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
@@ -44,7 +43,6 @@ export function useProfile(userId?: string) {
         if (user) {
           setUser(user);
           
-          // Use userId parameter if provided, otherwise use current user's id
           const targetUserId = userId || user.id;
           
           const { data: profileData, error: profileError } = await supabase
