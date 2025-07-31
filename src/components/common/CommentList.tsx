@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { deleteComment } from "@/lib/superbase/commentActions";
 import { supabase } from "@/lib/superbase/client";
 import type { Comment } from "@/lib/superbase/commentActions";

@@ -121,14 +121,6 @@ export default function FeedPage() {
     setAllPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
   };
 
-  const handlePostUpdated = (updatedPost: Post) => {
-    setAllPosts((prev) =>
-      prev.map((post) =>
-        post.id === updatedPost.id ? { ...post, ...updatedPost } : post
-      )
-    );
-  };
-
   const handleFilterChange = (filter: PostFilterType) => {
     setActiveFilter(filter);
     // No need to clear posts or reload - client-side filtering will handle it
