@@ -38,19 +38,20 @@ export default function SignUpPage() {
 
       // Don't redirect immediately - wait for email verification
       setIsEmailSent(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       let errorMessage = "Sign up failed. Please try again.";
 
       // Handle specific error cases
-      if (error?.message) {
-        if (error.message.includes("User already registered")) {
+      if (error && typeof error === "object" && "message" in error) {
+        const errorWithMessage = error as { message: string };
+        if (errorWithMessage.message.includes("User already registered")) {
           errorMessage =
             "An account with this email already exists. Please sign in instead.";
-        } else if (error.message.includes("email address")) {
+        } else if (errorWithMessage.message.includes("email address")) {
           errorMessage = "Please enter a valid email address.";
-        } else if (error.message.includes("password")) {
+        } else if (errorWithMessage.message.includes("password")) {
           errorMessage = "Password doesn't meet the requirements.";
-        } else if (error.message.includes("rate limit")) {
+        } else if (errorWithMessage.message.includes("rate limit")) {
           errorMessage = "Too many signup attempts. Please try again later.";
         }
       }

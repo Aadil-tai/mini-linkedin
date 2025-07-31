@@ -1,15 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useProfile } from "@/hooks/userProfile";
 
 export default function AboutMeSection({ userId }: { userId?: string }) {
   const { profile, loading, error } = useProfile(userId);
-  useEffect(() => {
-    if (profile) {
-      console.log("Fetched profile:", profile);
-    }
-  }, [profile]);
 
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>(
     {}
