@@ -38,13 +38,20 @@ export function GoogleButton({
   };
 
   const getRedirectUrl = () => {
-    // Handle both development and production environments
+    // Always use environment variable in production to avoid localhost issues
+    if (process.env.NODE_ENV === "production") {
+      return process.env.NEXT_PUBLIC_SITE_URL
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+        : "https://mini-linkedin.vercel.app/auth/callback";
+    }
+
+    // Only use window.location.origin in development
     if (typeof window !== "undefined") {
       return `${window.location.origin}/auth/callback`;
     }
-    return process.env.NEXT_PUBLIC_SITE_URL
-      ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-      : "https://mini-linkedin.vercel.app/auth/callback";
+
+    // Fallback for development SSR
+    return "http://localhost:3000/auth/callback";
   };
 
   return (
