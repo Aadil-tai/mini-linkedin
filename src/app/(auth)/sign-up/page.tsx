@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SignUpFormData, signUpSchema } from "@/lib/validation/auth";
@@ -12,7 +11,6 @@ import { FormButton } from "@/components/forms/FormButton";
 import { GoogleButton } from "@/components/common/GoogleButton";
 
 export default function SignUpPage() {
-  const router = useRouter();
   const {
     register,
     handleSubmit,

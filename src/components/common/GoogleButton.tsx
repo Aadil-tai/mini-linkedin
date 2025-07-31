@@ -1,57 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/superbase/client";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export function GoogleButton({
   text = "Continue with Google",
 }: {
   text?: string;
 }) {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: getRedirectUrl(),
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: "https://mini-linkedin.vercel.app",
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
         },
-      });
-
-      if (error) throw error;
-      router.refresh(); // Refresh page state after successful sign-in
-    } catch (error) {
-      console.error("Google OAuth error:", error);
-      // Consider adding toast notification here
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getRedirectUrl = () => {
-    // Always use environment variable in production to avoid localhost issues
-    if (process.env.NODE_ENV === "production") {
-      return process.env.NEXT_PUBLIC_SITE_URL
-        ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-        : "https://mini-linkedin.vercel.app/auth/callback";
-    }
-
-    // Only use window.location.origin in development
-    if (typeof window !== "undefined") {
-      return `${window.location.origin}/auth/callback`;
-    }
-
-    // Fallback for development SSR
-    return "http://localhost:3000/auth/callback";
+      },
+    });
+    setIsLoading(false);
   };
 
   return (
@@ -59,12 +31,12 @@ export function GoogleButton({
       onClick={handleGoogleSignIn}
       type="button"
       disabled={isLoading}
-      className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 disabled:opacity-75 disabled:cursor-not-allowed transition-colors"
+      className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 disabled:opacity-75"
     >
       {isLoading ? (
         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
       ) : (
-        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden="true">
+        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
           <path
             fill="#4285F4"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
