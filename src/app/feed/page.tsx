@@ -9,7 +9,8 @@ import { getPosts, PostFilterType } from "@/lib/superbase/postActions";
 import type { Post } from "@/lib/superbase/postActions";
 
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [allPosts, setAllPosts] = useState<Post[]>([]); // Store all loaded posts
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]); // Display filtered posts
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -19,19 +20,73 @@ export default function FeedPage() {
   // Load initial posts
   useEffect(() => {
     loadInitialPosts();
-  }, [activeFilter]); // Reload when filter changes
+  }, []); // Only load once on mount
+
+  // Apply client-side filtering when filter changes
+  useEffect(() => {
+    applyClientSideFilter();
+  }, [activeFilter, allPosts]);
 
   const loadInitialPosts = async () => {
     try {
       setInitialLoading(true);
-      const initialPosts = await getPosts(0, 10, { filter: activeFilter });
-      setPosts(initialPosts);
+      // Load with 'latest' filter to get all posts in chronological order
+      const initialPosts = await getPosts(0, 10, { filter: "latest" });
+      setAllPosts(initialPosts);
       setPage(0);
       setHasMore(initialPosts.length === 10);
     } catch (error) {
+      console.error("Error loading initial posts:", error);
     } finally {
       setInitialLoading(false);
     }
+  };
+
+  // Client-side filtering function
+  const applyClientSideFilter = () => {
+    let sorted = [...allPosts];
+
+    switch (activeFilter) {
+      case "latest":
+        sorted.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        break;
+      case "oldest":
+        sorted.sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        break;
+      case "popular":
+        sorted.sort((a, b) => {
+          if (b.likes !== a.likes) return b.likes - a.likes;
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+        break;
+      case "trending":
+        // For trending: posts from last 7 days with high engagement
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        sorted = sorted.filter(
+          (post) => new Date(post.created_at) >= sevenDaysAgo
+        );
+        sorted.sort((a, b) => {
+          const engagementA = a.likes + a.comments + a.shares;
+          const engagementB = b.likes + b.comments + b.shares;
+          if (engagementB !== engagementA) return engagementB - engagementA;
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+        break;
+    }
+
+    setFilteredPosts(sorted);
   };
 
   const loadMore = useCallback(async () => {
@@ -40,35 +95,43 @@ export default function FeedPage() {
     try {
       setLoading(true);
       const nextPage = page + 1;
-      const newPosts = await getPosts(nextPage, 10, { filter: activeFilter });
+      // Always load with 'latest' to maintain chronological order in allPosts
+      const newPosts = await getPosts(nextPage, 10, { filter: "latest" });
 
       if (newPosts.length === 0) {
         setHasMore(false);
         return;
       }
 
-      setPosts((prev) => [...prev, ...newPosts]);
+      setAllPosts((prev) => [...prev, ...newPosts]);
       setPage(nextPage);
       setHasMore(newPosts.length === 10);
     } catch (error) {
+      console.error("Error loading more posts:", error);
     } finally {
       setLoading(false);
     }
-  }, [page, loading, activeFilter]);
+  }, [page, loading]); // Removed activeFilter dependency
 
   const handleNewPost = (newPost: Post) => {
-    setPosts((prev) => [newPost, ...prev]);
+    setAllPosts((prev) => [newPost, ...prev]);
   };
 
   const handlePostDeleted = (deletedPostId: string) => {
-    setPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
+    setAllPosts((prev) => prev.filter((post) => post.id !== deletedPostId));
+  };
+
+  const handlePostUpdated = (updatedPost: Post) => {
+    setAllPosts((prev) =>
+      prev.map((post) =>
+        post.id === updatedPost.id ? { ...post, ...updatedPost } : post
+      )
+    );
   };
 
   const handleFilterChange = (filter: PostFilterType) => {
     setActiveFilter(filter);
-    setPosts([]); // Clear existing posts
-    setPage(0);
-    setHasMore(true);
+    // No need to clear posts or reload - client-side filtering will handle it
   };
 
   if (initialLoading) {
@@ -96,7 +159,7 @@ export default function FeedPage() {
 
       {/* Posts Feed */}
       <InfiniteScroll
-        dataLength={posts.length}
+        dataLength={filteredPosts.length}
         next={loadMore}
         hasMore={hasMore}
         loader={
@@ -106,19 +169,24 @@ export default function FeedPage() {
         }
         endMessage={
           <p className="text-center py-4 text-gray-500">
-            {posts.length === 0
+            {filteredPosts.length === 0
               ? "No posts yet. Create the first one!"
               : "You've seen all posts!"}
           </p>
         }
       >
         <section className="space-y-4">
-          {posts.map((post) => (
-            <PostCard
+          {filteredPosts.map((post, index) => (
+            <div
               key={post.id}
-              post={post}
-              onPostDeleted={handlePostDeleted}
-            />
+              className="transform transition-all duration-300 ease-in-out"
+              style={{
+                animationDelay: `${index * 50}ms`,
+                animation: "fadeInUp 0.3s ease-out forwards",
+              }}
+            >
+              <PostCard post={post} onPostDeleted={handlePostDeleted} />
+            </div>
           ))}
         </section>
       </InfiniteScroll>

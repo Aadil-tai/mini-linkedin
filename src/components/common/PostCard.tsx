@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { togglePostLike, deletePost } from "@/lib/superbase/postActions";
 import { supabase } from "@/lib/superbase/client";
+import CommentSection from "./CommentSection";
 
 interface PostCardProps {
   post: {
@@ -38,6 +39,8 @@ interface PostCardProps {
 export default function PostCard({ post, onPostDeleted }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(post.is_liked);
   const [likeCount, setLikeCount] = useState(post.likes);
+  const [commentCount, setCommentCount] = useState(post.comments);
+  const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -60,6 +63,14 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
     } catch (error) {
       console.error("Error toggling like:", error);
     }
+  };
+
+  const handleCommentClick = () => {
+    setIsCommentsExpanded(!isCommentsExpanded);
+  };
+
+  const handleCommentCountChange = (newCount: number) => {
+    setCommentCount(newCount);
   };
 
   const handleDelete = async () => {
@@ -180,7 +191,7 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
       {/* Post Stats */}
       <div className="mt-3 flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-4">
         <span>{likeCount} likes</span>
-        <span>{post.comments} comments</span>
+        <span>{commentCount} comments</span>
         <span>{post.shares} shares</span>
       </div>
 
@@ -195,7 +206,12 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
           <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
           <span>Like</span>
         </button>
-        <button className="flex items-center space-x-1 px-4 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
+        <button
+          onClick={handleCommentClick}
+          className={`flex items-center space-x-1 px-4 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            isCommentsExpanded ? "text-blue-500" : "text-gray-500"
+          }`}
+        >
           <MessageSquare size={18} />
           <span>Comment</span>
         </button>
@@ -204,6 +220,15 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
           <span>Share</span>
         </button>
       </div>
+
+      {/* Comment Section */}
+      <CommentSection
+        postId={post.id}
+        initialCommentCount={commentCount}
+        isExpanded={isCommentsExpanded}
+        onToggle={handleCommentClick}
+        onCommentCountChange={handleCommentCountChange}
+      />
     </div>
   );
 }
