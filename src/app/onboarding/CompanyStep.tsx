@@ -12,12 +12,7 @@ interface CompanyStepProps {
 export const CompanyStep = ({ register, errors }: CompanyStepProps) => {
   return (
     <div className="space-y-6">
-      {/* Enhanced Header - Hidden since it's shown in parent */}
-      {/* <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-        Company details
-      </h2> */}
-
-      {/* Two-Column Layout for Form Fields */}
+      {/* Form Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Company Name */}
         <div className="space-y-2">
@@ -42,7 +37,7 @@ export const CompanyStep = ({ register, errors }: CompanyStepProps) => {
         </div>
       </div>
 
-      {/* Company Size - Enhanced Full Width Section */}
+      {/* Company Size */}
       <div className="space-y-4">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Company Size
@@ -59,13 +54,9 @@ export const CompanyStep = ({ register, errors }: CompanyStepProps) => {
                 {...register("company.size")}
                 className="sr-only peer"
               />
-
-              {/* Custom Radio Button */}
               <div className="absolute left-4 w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-full transition-all duration-200 peer-checked:border-purple-500 peer-checked:bg-purple-500 group-hover:border-purple-400">
                 <div className="absolute inset-0.5 bg-white dark:bg-gray-800 rounded-full transition-all duration-200 peer-checked:bg-purple-500"></div>
               </div>
-
-              {/* Size Labels with Descriptions */}
               <div className="flex-1 ml-8 text-left">
                 <div className="font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-200">
                   {size}
@@ -76,8 +67,6 @@ export const CompanyStep = ({ register, errors }: CompanyStepProps) => {
                   {size === "Large" && "500+ employees"}
                 </div>
               </div>
-
-              {/* Selected State Indicator */}
               <div className="absolute inset-0 border-2 border-transparent rounded-xl peer-checked:border-purple-500 peer-checked:bg-purple-50 dark:peer-checked:bg-purple-900/30 transition-all duration-200"></div>
             </label>
           ))}
