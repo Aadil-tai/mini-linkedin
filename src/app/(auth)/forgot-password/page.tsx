@@ -180,7 +180,7 @@ export default function ForgotPasswordPage() {
       )}
 
       {/* Developer Reference Section - Remove in production */}
-      <div className="mt-8 w-full max-w-md p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
+      <div className=" hidden mt-8 w-full max-w-md p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-blue-500">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
           🔧 Developer Reference - Password Reset Implementation
         </h3>

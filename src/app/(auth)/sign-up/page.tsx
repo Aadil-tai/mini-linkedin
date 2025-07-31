@@ -45,7 +45,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/30 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-800 dark:via-blue-900/20 dark:to-indigo-900/30 flex items-center justify-center p-4">
       {/* Background elements remain unchanged */}
       <div className="relative w-full max-w-md">
         <div className="relative">
@@ -156,7 +156,7 @@ export default function SignUpPage() {
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     Already on Mini-LinkedIn?{" "}
                     <Link
-                      href="/(auth)/login"
+                      href="/login"
                       className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors hover:underline text-xs sm:text-sm"
                     >
                       Sign in

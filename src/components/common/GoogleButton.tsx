@@ -13,10 +13,17 @@ export function GoogleButton({
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+
+    // Simple environment check
+    const redirectUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://mini-linkedin.vercel.app/auth/callback"
+        : "http://localhost:3000/auth/callback";
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "https://mini-linkedin.vercel.app",
+        redirectTo: redirectUrl,
         queryParams: {
           access_type: "offline",
           prompt: "consent",
@@ -25,7 +32,6 @@ export function GoogleButton({
     });
     setIsLoading(false);
   };
-
   return (
     <button
       onClick={handleGoogleSignIn}
