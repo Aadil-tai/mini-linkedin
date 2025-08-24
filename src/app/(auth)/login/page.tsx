@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "@/components/forms/FormInput";
 import { FormButton } from "@/components/forms/FormButton";
 import { LoginFormData, loginSchema } from "@/lib/validation/auth";
-import { AuthService } from "@/lib/auth/authService";
 import dynamic from "next/dynamic";
 const GoogleButton = dynamic(() => import("@/components/common/GoogleButton"), {
   ssr: false,

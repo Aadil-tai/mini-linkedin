@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 import SearchResults from "./SearchResults";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 import { performSearch, SearchResult } from "@/lib/supabase/searchActions";
 import { clearProfileCompleteCookieClient } from "@/lib/utils";
 
@@ -19,6 +19,9 @@ interface User {
 
 export default function Header() {
   const router = useRouter();
+
+  // Create supabase client
+  const supabase = createBrowserSupabase();
   const [user, setUser] = useState<User | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

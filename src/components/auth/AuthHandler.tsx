@@ -2,11 +2,14 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 import { AuthService } from "@/lib/auth/authService";
 
 export function AuthHandler() {
   const router = useRouter();
+
+  // Create supabase client
+  const supabase = createBrowserSupabase();
 
   useEffect(() => {
     const {

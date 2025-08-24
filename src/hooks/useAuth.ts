@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase/client';
+import { createBrowserSupabase } from "@/lib/supabase/client";
 import { AuthService, UserProfile } from '@/lib/auth/authService';
 
 interface UseAuthReturn {
@@ -19,7 +19,7 @@ interface UseAuthReturn {
   }>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  refreshTokens: () => Promise<boolean>;
+  ensureValidTokens: () => Promise<boolean>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -28,6 +28,8 @@ export function useAuth(): UseAuthReturn {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Create supabase client
+  const supabase = createBrowserSupabase();
 
   // Refresh user profile from database
   const refreshProfile = useCallback(async () => {
@@ -161,9 +163,9 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
-  // Refresh tokens manually
-  const refreshTokens = useCallback(async () => {
-    return AuthService.refreshTokens();
+  // Ensure valid tokens (Supabase SSR handles refresh automatically)
+  const ensureValidTokens = useCallback(async () => {
+    return AuthService.ensureValidTokens();
   }, []);
 
   const isAuthenticated = !!user && !!session;
@@ -179,7 +181,7 @@ export function useAuth(): UseAuthReturn {
     login,
     loginWithGoogle,
     logout,
-    refreshTokens,
+    ensureValidTokens,
     refreshProfile,
   };
 }

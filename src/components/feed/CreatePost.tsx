@@ -4,7 +4,7 @@ import { useState } from "react";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
 import { FormButton } from "@/components/forms/FormButton";
 import { ImageIcon, X, Video, BarChart, Smile } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 import { useProfile } from "@/hooks/userProfile";
 import type { Post } from "@/lib/supabase/postActions";
 
@@ -18,6 +18,9 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Create supabase client
+  const supabase = createBrowserSupabase();
 
   // Use the useProfile hook to get current user's profile
   const { profile, user } = useProfile();

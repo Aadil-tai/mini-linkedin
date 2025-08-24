@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 import { FormInput } from "@/components/forms/FormInput";
 import { FormButton } from "@/components/forms/FormButton";
 import { PasswordResetForm } from "@/components/auth/PasswordResetForm";
@@ -24,6 +24,9 @@ export default function ForgotPasswordPage() {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Create supabase client
+  const supabase = createBrowserSupabase();
+
   const {
     register,
     handleSubmit,
@@ -35,7 +38,7 @@ export default function ForgotPasswordPage() {
 
   // ✅ Step 2: Listen for PASSWORD_RECOVERY event
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    const { data } = supabase.auth.onAuthStateChange((event: string) => {
       if (event === "PASSWORD_RECOVERY") {
         setShowPasswordReset(true);
       }

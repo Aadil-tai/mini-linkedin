@@ -14,7 +14,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Header from "@/components/common/Header";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 
 interface ProfileData {
   id: string;
@@ -42,6 +42,9 @@ export default function MemberPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Create supabase client
+  const supabase = createBrowserSupabase();
 
   useEffect(() => {
     async function fetchMemberProfile() {

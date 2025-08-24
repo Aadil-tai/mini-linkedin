@@ -24,7 +24,7 @@ import {
   onboardingSchema,
 } from "@/lib/schema/onboardingSchema";
 import { FormButton } from "@/components/forms/FormButton";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 import { updateProfile } from "@/lib/supabase/profileAction";
 
 export default function OnboardingPage() {
@@ -33,6 +33,9 @@ export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const router = useRouter();
+
+  // Create supabase client
+  const supabase = createBrowserSupabase();
 
   // Clean up URL hash on component mount
   useEffect(() => {

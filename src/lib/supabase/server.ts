@@ -12,7 +12,7 @@ export function createServerSupabase() {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: any) {
+        set(name: string, value: string, options: Record<string, unknown>) {
           try {
             cookieStore.set({ name, value, ...options });
           } catch {
@@ -21,7 +21,7 @@ export function createServerSupabase() {
             // user sessions.
           }
         },
-        remove(name: string, options: any) {
+        remove(name: string, options: Record<string, unknown>) {
           try {
             cookieStore.set({ name, value: "", ...options });
           } catch {

@@ -10,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { togglePostLike, deletePost } from "@/lib/supabase/postActions";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 import CommentSection from "./CommentSection";
 
 interface PostCardProps {
@@ -43,6 +43,9 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Create supabase client
+  const supabase = createBrowserSupabase();
 
   useEffect(() => {
     const getUser = async () => {

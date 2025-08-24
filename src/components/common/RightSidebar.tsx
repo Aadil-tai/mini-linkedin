@@ -27,13 +27,21 @@ const RightSidebar = () => {
         const posts = await getRecentPostsForSidebar(5);
         // Transform the data to match our interface
         const formattedPosts =
-          posts?.map((post) => ({
-            ...post,
-            profiles: Array.isArray(post.profiles)
-              ? post.profiles[0] || {}
-              : post.profiles || {},
-          })) || [];
-        setRecentPosts(formattedPosts);
+          posts?.map(
+            (post: {
+              profiles: Profile | Profile[];
+              id: string;
+              content: string;
+              created_at: string;
+              [key: string]: unknown;
+            }) => ({
+              ...post,
+              profiles: Array.isArray(post.profiles)
+                ? post.profiles[0] || {}
+                : post.profiles || {},
+            })
+          ) || [];
+        setRecentPosts(formattedPosts as Post[]);
       } catch (error) {
         console.error("Error loading recent posts:", error);
       } finally {

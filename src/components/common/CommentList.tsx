@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import { deleteComment } from "@/lib/supabase/commentActions";
-import { supabase } from "@/lib/supabase/client";
+import { createBrowserSupabase } from "@/lib/supabase/client";
 import type { Comment } from "@/lib/supabase/commentActions";
 
 // Simple time ago function without external dependencies
@@ -35,6 +35,9 @@ export default function CommentList({
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
     null
   );
+
+  // Create supabase client
+  const supabase = createBrowserSupabase();
 
   useEffect(() => {
     const getUser = async () => {
