@@ -37,11 +37,19 @@ export default function SignUpPage() {
       }
 
       if (result.user && result.session) {
-        // Redirect to onboarding (AuthService handles this logic)
+        // User has session - redirect to onboarding immediately
+        console.log(
+          "User logged in immediately - redirecting to:",
+          result.redirectTo
+        );
         router.push(result.redirectTo);
-      } else {
-        // For email confirmation scenarios, show email sent message
+      } else if (result.user && !result.session) {
+        // User created but no session - email confirmation required
+        console.log("Email confirmation required - showing email sent message");
         setIsEmailSent(true);
+      } else {
+        // No user created
+        throw new Error("Failed to create user account");
       }
     } catch (error: unknown) {
       let errorMessage = "Sign up failed. Please try again.";
@@ -50,7 +58,13 @@ export default function SignUpPage() {
       if (error && typeof error === "object" && "message" in error) {
         const errorWithMessage = error as { message: string };
 
-        if (errorWithMessage.message.includes("User already registered")) {
+        if (
+          errorWithMessage.message.includes("User already registered") ||
+          errorWithMessage.message.includes("already registered") ||
+          errorWithMessage.message.includes("already exists") ||
+          errorWithMessage.message.includes("email already exists") ||
+          errorWithMessage.message.includes("Account with this email")
+        ) {
           errorMessage =
             "An account with this email already exists. Please sign in instead.";
         } else if (errorWithMessage.message.includes("email address")) {

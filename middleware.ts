@@ -1,10 +1,59 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  let response = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: Record<string, unknown>) {
+          req.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: Record<string, unknown>) {
+          req.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
 
   // Refresh session if expired - required for Server Components
   const {
@@ -12,12 +61,9 @@ export async function middleware(req: NextRequest) {
     error,
   } = await supabase.auth.getSession()
 
-  // If there's an error getting the session, clear any auth cookies
+  // If there's an error getting the session, continue without blocking
   if (error) {
     console.error('Middleware auth error:', error)
-    // Clear auth cookies on error
-    res.cookies.delete('sb-access-token')
-    res.cookies.delete('sb-refresh-token')
   }
 
   // Protected routes
@@ -50,28 +96,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // For onboarding route, check if user has completed profile
+  // For onboarding route, allow authenticated users to access it
+  // The onboarding page will handle its own redirect logic based on profile completeness
   if (pathname === '/onboarding' && session) {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .single()
-
-      // If profile exists, redirect to feed
-      if (profile) {
-        const redirectUrl = req.nextUrl.clone()
-        redirectUrl.pathname = '/feed'
-        return NextResponse.redirect(redirectUrl)
-      }
-    } catch (error) {
-      console.error('Error checking profile in middleware:', error)
-      // Continue to onboarding on error
-    }
+    return response
   }
 
-  return res
+  return response
 }
 
 export const config = {

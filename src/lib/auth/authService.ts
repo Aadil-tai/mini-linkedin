@@ -105,6 +105,46 @@ export class AuthService {
     }
   }
 
+  // Check if email already exists by attempting sign in with a dummy password
+  static async checkEmailExists(email: string): Promise<boolean> {
+    try {
+      // Try to sign in with a dummy password
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'dummy-password-that-wont-match-123!@#',
+      });
+
+      if (!error) {
+        // This should never happen with a dummy password, but if it does, email exists
+        return true;
+      }
+
+      // Check the error message to determine if email exists
+      if (error.message.includes('Invalid login credentials') ||
+          error.message.includes('Wrong password') ||
+          error.message.includes('Invalid credentials') ||
+          error.message.includes('Too many requests')) {
+        // These errors indicate the email exists but password is wrong
+        return true;
+      }
+
+      if (error.message.includes('User not found') ||
+          error.message.includes('Email not found') ||
+          error.message.includes('Invalid email')) {
+        // These errors indicate email doesn't exist
+        return false;
+      }
+
+      // For any other error, assume email might exist (safer approach)
+      console.warn('Unknown auth error when checking email:', error.message);
+      return false; // Default to allowing signup attempt
+    } catch (error) {
+      console.error('Error checking email existence:', error);
+      // On error, allow signup attempt
+      return false;
+    }
+  }
+
   // Email/Password Signup
   static async signupWithEmail(email: string, password: string, fullName?: string): Promise<{
     user: User | null;
@@ -114,6 +154,23 @@ export class AuthService {
     error?: string;
   }> {
     try {
+      console.log('Starting signup with email:', email);
+
+      // First, check if email already exists
+      const emailExists = await this.checkEmailExists(email);
+      if (emailExists) {
+        console.log('Email already exists in system');
+        return {
+          user: null,
+          session: null,
+          profile: null,
+          redirectTo: '/sign-up',
+          error: 'An account with this email already exists. Please sign in instead.',
+        };
+      }
+
+      console.log('EmailRedirectTo:', `${window.location.origin}/auth/callback`);
+      
       const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
@@ -125,7 +182,10 @@ export class AuthService {
         },
       });
 
+      console.log('Signup response:', { authData, error });
+
       if (error) {
+        console.error('Signup error:', error);
         return {
           user: null,
           session: null,
@@ -137,17 +197,33 @@ export class AuthService {
 
       const { user, session } = authData;
 
+      // Check for the case where Supabase doesn't throw an error but user creation failed
       if (!user) {
+        console.error('No user returned from signup');
         return {
           user: null,
           session: null,
           profile: null,
           redirectTo: '/sign-up',
-          error: 'Failed to create user',
+          error: 'Failed to create user account',
         };
       }
 
-      // YOUR LOGIC: New users always go to onboarding
+      console.log('User created:', user.id, 'Session:', session ? 'exists' : 'null');
+
+      // If email confirmation is required, session will be null
+      if (!session) {
+        console.log('Email confirmation required - no session yet');
+        return {
+          user,
+          session: null,
+          profile: null,
+          redirectTo: '/sign-up', // Stay on sign-up page to show email sent message
+        };
+      }
+
+      // If session exists, user is immediately logged in (email confirmation disabled)
+      console.log('User logged in immediately - email confirmation disabled');
       return {
         user,
         session,

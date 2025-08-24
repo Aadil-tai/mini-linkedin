@@ -1,4 +1,4 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -7,11 +7,44 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
 
   if (!code) {
+    console.error('No code in callback URL');
     return NextResponse.redirect(`${requestUrl.origin}/login?error=no_code`);
   }
 
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = cookies();
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: Record<string, unknown>) {
+            try {
+              cookieStore.set({ name, value, ...options });
+            } catch {
+              // The `set` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+          remove(name: string, options: Record<string, unknown>) {
+            try {
+              cookieStore.set({ name, value: "", ...options });
+            } catch {
+              // The `remove` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        },
+      }
+    );
+
+    console.log('Exchanging code for session:', code);
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (error) {
@@ -25,21 +58,12 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${requestUrl.origin}/login?error=no_session`);
     }
 
-    // Check if user profile exists in database
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, user_id')
-      .eq('user_id', user.id)
-      .single();
-
-    // Redirect based on profile existence
-    if (profile && !profileError) {
-      // User has completed profile - redirect to feed
-      return NextResponse.redirect(`${requestUrl.origin}/feed`);
-    } else {
-      // New user or incomplete profile - redirect to onboarding
-      return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
-    }
+    console.log('User confirmed email:', user.id);
+    
+    // For email confirmation flow, ALWAYS redirect to onboarding first
+    // The onboarding page will handle checking if profile is complete
+    console.log('Email confirmation successful - redirecting to onboarding');
+    return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
   } catch (error) {
     console.error('Unexpected error in auth callback:', error);
     return NextResponse.redirect(`${requestUrl.origin}/login?error=unexpected_error`);

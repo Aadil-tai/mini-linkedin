@@ -79,6 +79,28 @@ export default function OnboardingPage() {
       } = await supabase.auth.getUser();
 
       if (user) {
+        // Check if user already has a complete profile
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        // If profile exists and is complete, redirect to feed
+        if (
+          profile &&
+          !profileError &&
+          profile.first_name &&
+          profile.last_name &&
+          profile.job_title
+        ) {
+          console.log(
+            "User already has complete profile - redirecting to feed"
+          );
+          router.replace("/feed");
+          return;
+        }
+
         setUserInfo({
           email: user.email ?? null,
           photo: user.user_metadata?.avatar_url || null,
@@ -99,7 +121,7 @@ export default function OnboardingPage() {
       }
     }
     fetchUser();
-  }, [setValue, trigger]);
+  }, [setValue, trigger, router, supabase]);
 
   const skills = watch("professional.skills") || [];
 
