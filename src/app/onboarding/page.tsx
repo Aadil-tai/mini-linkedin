@@ -79,26 +79,56 @@ export default function OnboardingPage() {
       } = await supabase.auth.getUser();
 
       if (user) {
+        console.log("=== ONBOARDING PROFILE CHECK ===");
+        console.log("User ID from session:", user.id);
+
         // Check if user already has a complete profile
-        const { data: profile, error: profileError } = await supabase
+        const { data: profiles, error: profileError } = await supabase
           .from("profiles")
           .select("*")
-          .eq("user_id", user.id)
-          .single();
+          .eq("user_id", user.id);
 
-        // If profile exists and is complete, redirect to feed
-        if (
-          profile &&
-          !profileError &&
-          profile.first_name &&
-          profile.last_name &&
-          profile.job_title
-        ) {
-          console.log(
-            "User already has complete profile - redirecting to feed"
-          );
-          router.replace("/feed");
-          return;
+        console.log("Onboarding profile query:", {
+          profiles_count: profiles ? profiles.length : 0,
+          error: profileError ? profileError.message : "No error",
+          profiles: profiles,
+        });
+
+        if (profiles && profiles.length > 0 && !profileError) {
+          // If multiple profiles, take the first one
+          const profile = profiles[0];
+          console.log("Using profile:", {
+            total_profiles: profiles.length,
+            selected_profile: profile,
+          });
+          const fullName = profile.full_name;
+          const company = profile.company;
+
+          console.log("Profile field check:", {
+            full_name: fullName,
+            full_name_valid: fullName && fullName.toString().trim().length > 0,
+            company: company,
+            company_valid: company && company.toString().trim().length > 0,
+          });
+
+          // Simple check - just full_name and company
+          const isComplete =
+            fullName &&
+            fullName.toString().trim().length > 0 &&
+            company &&
+            company.toString().trim().length > 0;
+
+          console.log("Profile complete?", isComplete);
+
+          if (isComplete) {
+            console.log(
+              "User already has complete profile - redirecting to feed"
+            );
+            router.replace("/feed");
+            return;
+          } else {
+            console.log("Profile incomplete - staying on onboarding");
+          }
         }
 
         setUserInfo({

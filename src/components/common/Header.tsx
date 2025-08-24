@@ -107,7 +107,7 @@ export default function Header() {
       await supabase.auth.signOut();
 
       // Redirect to login page
-      router.push("/(auth)/login");
+      router.push("/login");
       setShowDropdown(false);
     } catch (error) {
       console.error("Error signing out:", error);

@@ -56,10 +56,7 @@ export async function middleware(req: NextRequest) {
   )
 
   // Refresh session if expired - required for Server Components
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession()
+  const { data: { session }, error } = await supabase.auth.getSession()
 
   // If there's an error getting the session, continue without blocking
   if (error) {
@@ -67,18 +64,20 @@ export async function middleware(req: NextRequest) {
   }
 
   // Protected routes
-  const protectedRoutes = ['/feed', '/profile', '/onboarding', '/members']
-  const authRoutes = ['/login', '/sign-up']
+  const protectedRoutes = ['/feed', '/profile', '/members']
+  const authRoutes = ['/login', '/sign-up', '/forgot-password']
+  const publicRoutes = ['/', '/about', '/contact']
   const pathname = req.nextUrl.pathname
 
-  // Check if the current path is a protected route
+  // Check route types
   const isProtectedRoute = protectedRoutes.some(route => 
     pathname.startsWith(route)
   )
-
-  // Check if the current path is an auth route
   const isAuthRoute = authRoutes.some(route => 
     pathname.startsWith(route)
+  )
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route
   )
 
   // If user is not authenticated and trying to access protected route
@@ -89,17 +88,150 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // If user is authenticated and trying to access auth routes, redirect to feed
+  // If user is authenticated and trying to access auth routes
   if (isAuthRoute && session) {
-    const redirectUrl = req.nextUrl.clone()
-    redirectUrl.pathname = '/feed'
-    return NextResponse.redirect(redirectUrl)
+    console.log('=== MIDDLEWARE AUTH ROUTE CHECK ===');
+    console.log('User ID:', session.user.id);
+    console.log('User Email:', session.user.email);
+    
+    // Check if profile is complete
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name, company, user_id, email, first_name, last_name')
+      .eq('user_id', session.user.id)
+
+    console.log('Profile query result:', { 
+      profiles_count: profiles ? profiles.length : 0,
+      error: profileError?.message,
+      profiles: profiles
+    });
+
+    if (profiles && profiles.length > 0 && !profileError) {
+      // If multiple profiles, find the most complete one
+      console.log('Found multiple profiles, selecting most complete one');
+      const profile = profiles.reduce((best, current) => {
+        const bestScore = (best?.full_name ? 1 : 0) + (best?.company ? 1 : 0) + 
+                         (best?.first_name ? 1 : 0) + (best?.last_name ? 1 : 0);
+        const currentScore = (current?.full_name ? 1 : 0) + (current?.company ? 1 : 0) + 
+                           (current?.first_name ? 1 : 0) + (current?.last_name ? 1 : 0);
+        return currentScore > bestScore ? current : best;
+      });
+      
+      console.log('Using profile for auth route validation:', {
+        total_profiles: profiles.length,
+        selected_profile: profile,
+        all_profiles: profiles
+      });
+
+      const isProfileComplete = profile?.full_name && profile?.company
+      console.log('Profile completeness:', {
+        full_name: profile?.full_name,
+        company: profile?.company,
+        isComplete: isProfileComplete
+      });
+      
+      // Redirect to feed if profile is complete, otherwise to onboarding
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = isProfileComplete ? '/feed' : '/onboarding'
+      console.log('Redirecting to:', redirectUrl.pathname);
+      return NextResponse.redirect(redirectUrl)
+    } else {
+      console.log('No profiles found - redirecting to onboarding');
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = '/onboarding'
+      return NextResponse.redirect(redirectUrl)
+    }
   }
 
-  // For onboarding route, allow authenticated users to access it
-  // The onboarding page will handle its own redirect logic based on profile completeness
+  // If user is authenticated and accessing onboarding, check if they should be redirected
   if (pathname === '/onboarding' && session) {
-    return response
+    console.log('=== MIDDLEWARE ONBOARDING CHECK ===');
+    console.log('User ID:', session.user.id);
+    
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name, company, user_id')
+      .eq('user_id', session.user.id)
+
+    console.log('Onboarding profile check:', { 
+      profiles_count: profiles ? profiles.length : 0,
+      error: profileError?.message,
+      profiles: profiles
+    });
+
+    if (profiles && profiles.length > 0 && !profileError) {
+      // If multiple profiles, take the first one
+      const profile = profiles[0];
+      console.log('Using profile for onboarding validation:', {
+        total_profiles: profiles.length,
+        selected_profile: profile
+      });
+
+      const isProfileComplete = profile?.full_name && profile?.company
+      console.log('Profile completeness on onboarding:', {
+        full_name: profile?.full_name,
+        company: profile?.company,
+        isComplete: isProfileComplete
+      });
+      
+      if (isProfileComplete) {
+        console.log('Profile complete - redirecting to feed');
+        const redirectUrl = req.nextUrl.clone()
+        redirectUrl.pathname = '/feed'
+        return NextResponse.redirect(redirectUrl)
+      } else {
+        console.log('Profile incomplete - staying on onboarding');
+      }
+    } else {
+      console.log('No profiles found - staying on onboarding');
+    }
+  }
+
+  // If user is authenticated and accessing feed, check if they need onboarding
+  if (pathname === '/feed' && session) {
+    console.log('=== MIDDLEWARE FEED CHECK ===');
+    console.log('User ID:', session.user.id);
+    console.log('Terminal Log: Checking feed access for user');
+    
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name, company, user_id')
+      .eq('user_id', session.user.id)
+
+    console.log('Terminal Log: Feed profile check result');
+    console.log('Profiles count:', profiles ? profiles.length : 0);
+    console.log('Error:', profileError?.message || 'None');
+    if (profiles && profiles.length > 0) {
+      console.log('First profile data:', JSON.stringify(profiles[0], null, 2));
+    }
+
+    if (!profiles || profiles.length === 0 || profileError) {
+      console.log('Terminal Log: No profiles found or error - redirecting to onboarding');
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = '/onboarding'
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // If multiple profiles, take the first one
+    const profile = profiles[0];
+    console.log('Terminal Log: Using profile for validation');
+    console.log('Total profiles:', profiles.length);
+    console.log('Selected profile:', JSON.stringify(profile, null, 2));
+
+    const isProfileComplete = profile?.full_name && profile?.company
+    console.log('Terminal Log: Profile completeness check');
+    console.log('full_name:', profile?.full_name);
+    console.log('company:', profile?.company);
+    console.log('isComplete:', isProfileComplete);
+    
+    if (!isProfileComplete) {
+      console.log('Terminal Log: Profile incomplete - redirecting to onboarding');
+      const redirectUrl = req.nextUrl.clone()
+      redirectUrl.pathname = '/onboarding'
+      return NextResponse.redirect(redirectUrl)
+    } else {
+      console.log('Terminal Log: Profile complete - staying on feed');
+    }
   }
 
   return response
@@ -113,7 +245,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public (public files)
+     * - api (API routes)
+     * - auth (auth callback routes)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api|auth).*)',
   ],
 }

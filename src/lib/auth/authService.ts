@@ -27,20 +27,69 @@ export interface UserProfile {
 
 // ---------- Auth Service ----------
 export class AuthService {
-  // Check if user profile exists in database
+  // Check if user profile exists AND is complete in database
   static async checkUserProfile(userId: string): Promise<UserProfile | null> {
     try {
-      const { data: profile, error } = await supabase
+      console.log('=== PROFILE CHECK START ===');
+      console.log('Checking profile for user ID:', userId);
+      console.log('User ID type:', typeof userId);
+      console.log('User ID length:', userId ? userId.length : 'null');
+      
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
-        .single();
+        .eq('user_id', userId);
 
-      if (error || !profile) {
+      console.log('Profile query result:', { 
+        profiles_count: profiles ? profiles.length : 0,
+        error: error ? error.message : 'No error',
+        profiles: profiles
+      });
+
+      if (error || !profiles || profiles.length === 0) {
+        console.log('No profile found or error occurred');
         return null;
       }
 
-      return profile as UserProfile;
+      // If multiple profiles, take the first one (or most recent)
+      const profile = profiles[0];
+      console.log('Using profile:', {
+        profile_user_id: profile.user_id,
+        profile_id: profile.id,
+        total_profiles: profiles.length
+      });
+
+      // Check if profile is complete (simplified check with full_name and company)
+      const fullName = profile.full_name;
+      const company = profile.company;
+      
+      console.log('Profile field values:', {
+        full_name: fullName,
+        full_name_type: typeof fullName,
+        full_name_length: fullName ? fullName.length : 'null',
+        company: company,
+        company_type: typeof company,
+        company_length: company ? company.length : 'null'
+      });
+
+      // Simple check - just full_name and company
+      const isComplete = fullName && 
+                        fullName.toString().trim().length > 0 &&
+                        company && 
+                        company.toString().trim().length > 0;
+
+      console.log('Profile completeness check:', {
+        full_name_valid: fullName && fullName.toString().trim().length > 0,
+        company_valid: company && company.toString().trim().length > 0,
+        isComplete
+      });
+
+      // Only return profile if it's complete
+      const result = isComplete ? (profile as UserProfile) : null;
+      console.log('Final result:', result ? 'Profile is complete - returning profile' : 'Profile is incomplete - returning null');
+      console.log('=== PROFILE CHECK END ===');
+      
+      return result;
     } catch (error) {
       console.error('Error checking user profile:', error);
       return null;
@@ -83,10 +132,10 @@ export class AuthService {
         };
       }
 
-      // Check if user profile exists
+      // Check if user profile exists and is complete
       const profile = await this.checkUserProfile(user.id);
 
-      // YOUR LOGIC: IF USER HAS PROFILE → FEED, ELSE → ONBOARDING
+      // YOUR LOGIC: IF USER HAS COMPLETE PROFILE → FEED, ELSE → ONBOARDING
       return {
         user,
         session,
@@ -105,46 +154,6 @@ export class AuthService {
     }
   }
 
-  // Check if email already exists by attempting sign in with a dummy password
-  static async checkEmailExists(email: string): Promise<boolean> {
-    try {
-      // Try to sign in with a dummy password
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'dummy-password-that-wont-match-123!@#',
-      });
-
-      if (!error) {
-        // This should never happen with a dummy password, but if it does, email exists
-        return true;
-      }
-
-      // Check the error message to determine if email exists
-      if (error.message.includes('Invalid login credentials') ||
-          error.message.includes('Wrong password') ||
-          error.message.includes('Invalid credentials') ||
-          error.message.includes('Too many requests')) {
-        // These errors indicate the email exists but password is wrong
-        return true;
-      }
-
-      if (error.message.includes('User not found') ||
-          error.message.includes('Email not found') ||
-          error.message.includes('Invalid email')) {
-        // These errors indicate email doesn't exist
-        return false;
-      }
-
-      // For any other error, assume email might exist (safer approach)
-      console.warn('Unknown auth error when checking email:', error.message);
-      return false; // Default to allowing signup attempt
-    } catch (error) {
-      console.error('Error checking email existence:', error);
-      // On error, allow signup attempt
-      return false;
-    }
-  }
-
   // Email/Password Signup
   static async signupWithEmail(email: string, password: string, fullName?: string): Promise<{
     user: User | null;
@@ -155,20 +164,6 @@ export class AuthService {
   }> {
     try {
       console.log('Starting signup with email:', email);
-
-      // First, check if email already exists
-      const emailExists = await this.checkEmailExists(email);
-      if (emailExists) {
-        console.log('Email already exists in system');
-        return {
-          user: null,
-          session: null,
-          profile: null,
-          redirectTo: '/sign-up',
-          error: 'An account with this email already exists. Please sign in instead.',
-        };
-      }
-
       console.log('EmailRedirectTo:', `${window.location.origin}/auth/callback`);
       
       const { data: authData, error } = await supabase.auth.signUp({
@@ -223,12 +218,15 @@ export class AuthService {
       }
 
       // If session exists, user is immediately logged in (email confirmation disabled)
-      console.log('User logged in immediately - email confirmation disabled');
+      // Since you have a trigger that creates profiles, check if it's complete
+      console.log('User logged in immediately - checking profile completeness');
+      const profile = await this.checkUserProfile(user.id);
+      
       return {
         user,
         session,
-        profile: null, // New users don't have profiles yet
-        redirectTo: '/onboarding',
+        profile,
+        redirectTo: profile ? '/feed' : '/onboarding',
       };
     } catch (error) {
       console.error('Signup error:', error);
@@ -298,10 +296,10 @@ export class AuthService {
         };
       }
 
-      // Check if user profile exists
+      // Check if user profile exists and is complete
       const profile = await this.checkUserProfile(user.id);
 
-      // YOUR LOGIC: IF USER HAS PROFILE → FEED, ELSE → ONBOARDING
+      // YOUR LOGIC: IF USER HAS COMPLETE PROFILE → FEED, ELSE → ONBOARDING
       return {
         user,
         session,
