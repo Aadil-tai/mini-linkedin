@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 import SearchResults from "./SearchResults";
-import { supabase } from "@/lib/superbase/client";
-import { performSearch, SearchResult } from "@/lib/superbase/searchActions";
+import { supabase } from "@/lib/supabase/client";
+import { performSearch, SearchResult } from "@/lib/supabase/searchActions";
 import { clearProfileCompleteCookieClient } from "@/lib/utils";
 
 interface User {

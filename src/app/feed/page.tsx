@@ -5,8 +5,8 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import PostCard from "@/components/common/PostCard";
 import CreatePost from "@/components/feed/CreatePost";
 import PostFilters from "@/components/feed/PostFilters";
-import { getPosts, PostFilterType } from "@/lib/superbase/postActions";
-import type { Post } from "@/lib/superbase/postActions";
+import { getPosts, PostFilterType } from "@/lib/supabase/postActions";
+import type { Post } from "@/lib/supabase/postActions";
 
 export default function FeedPage() {
   const [allPosts, setAllPosts] = useState<Post[]>([]); // Store all loaded posts

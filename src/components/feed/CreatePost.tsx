@@ -4,9 +4,9 @@ import { useState } from "react";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
 import { FormButton } from "@/components/forms/FormButton";
 import { ImageIcon, X, Video, BarChart, Smile } from "lucide-react";
-import { supabase } from "@/lib/superbase/client";
+import { supabase } from "@/lib/supabase/client";
 import { useProfile } from "@/hooks/userProfile";
-import type { Post } from "@/lib/superbase/postActions";
+import type { Post } from "@/lib/supabase/postActions";
 
 interface CreatePostProps {
   onPostCreated?: (newPost: Post) => void;

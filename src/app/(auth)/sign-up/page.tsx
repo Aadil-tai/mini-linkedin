@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SignUpFormData, signUpSchema } from "@/lib/validation/auth";
-import { supabase } from "@/lib/superbase/client";
+import { AuthService } from "@/lib/auth/authService";
 import { FormInput } from "@/components/forms/FormInput";
 import { FormButton } from "@/components/forms/FormButton";
-import { GoogleButton } from "@/components/common/GoogleButton";
+import GoogleButton from "@/components/common/GoogleButton";
 
 export default function SignUpPage() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -24,20 +26,23 @@ export default function SignUpPage() {
 
   const onSubmit = async (data: SignUpFormData) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-          },
-        },
-      });
+      const result = await AuthService.signupWithEmail(
+        data.email,
+        data.password,
+        data.fullName
+      );
 
-      if (error) throw error;
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
-      // Don't redirect immediately - wait for email verification
-      setIsEmailSent(true);
+      if (result.user && result.session) {
+        // Redirect to onboarding (AuthService handles this logic)
+        router.push(result.redirectTo);
+      } else {
+        // For email confirmation scenarios, show email sent message
+        setIsEmailSent(true);
+      }
     } catch (error: unknown) {
       let errorMessage = "Sign up failed. Please try again.";
 

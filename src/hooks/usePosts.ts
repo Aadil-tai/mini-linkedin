@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { getPosts, createPost, togglePostLike, deletePost } from "@/lib/superbase/postActions";
-import type { Post, CreatePostData } from "@/lib/superbase/postActions";
+import { getPosts, createPost, togglePostLike, deletePost } from "@/lib/supabase/postActions";
+import type { Post, CreatePostData } from "@/lib/supabase/postActions";
 
 export const usePosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);

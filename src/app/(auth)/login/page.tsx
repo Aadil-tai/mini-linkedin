@@ -3,15 +3,14 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { supabase } from "@/lib/superbase/client";
 import { FormInput } from "@/components/forms/FormInput";
 import { FormButton } from "@/components/forms/FormButton";
-import { GoogleButton } from "@/components/common/GoogleButton";
 import { LoginFormData, loginSchema } from "@/lib/validation/auth";
-import {
-  getProfileCompleteCookieClient,
-  setProfileCompleteCookieClient,
-} from "@/lib/utils";
+import { AuthService } from "@/lib/auth/authService";
+import dynamic from "next/dynamic";
+const GoogleButton = dynamic(() => import("@/components/common/GoogleButton"), {
+  ssr: false,
+});
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,43 +25,27 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
+      const { AuthService } = await import("@/lib/auth/authService");
 
-      if (error) throw error;
+      const result = await AuthService.loginWithEmail(
+        data.email,
+        data.password
+      );
 
-      // Check if user has completed profile
-      if (authData.user) {
-        // Check cookie first for faster response
-        const hasProfileCookie = getProfileCompleteCookieClient();
-
-        if (hasProfileCookie) {
-          router.replace("/feed");
-          return;
-        }
-
-        // If no cookie, check database
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", authData.user.id)
-          .single();
-
-        if (profile && !profileError) {
-          // User has profile, set cookie and redirect to feed
-          setProfileCompleteCookieClient();
-          router.replace("/feed");
-        } else {
-          // User doesn't have profile, redirect to onboarding
-          router.replace("/onboarding");
-        }
+      if (result.error) {
+        setError("root", {
+          type: "manual",
+          message: result.error,
+        });
+        return;
       }
+
+      // Redirect based on profile existence
+      router.replace(result.redirectTo);
     } catch (error) {
       setError("root", {
         type: "manual",
-        message: "Invalid credentials. Please try again.",
+        message: "An unexpected error occurred. Please try again.",
       });
     }
   };

@@ -2,13 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-import { supabase } from "@/lib/superbase/client";
-import {
-  getProfileCompleteCookieClient,
-  setProfileCompleteCookieClient,
-  clearProfileCompleteCookieClient,
-} from "@/lib/utils";
+import { supabase } from "@/lib/supabase/client";
+import { AuthService } from "@/lib/auth/authService";
 
 export function AuthHandler() {
   const router = useRouter();
@@ -18,33 +13,28 @@ export function AuthHandler() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
-        // Check cookie first for faster response
-        const hasProfileCookie = getProfileCompleteCookieClient();
+        try {
+          // Check if user profile exists in database
+          const profile = await AuthService.checkUserProfile(session.user.id);
 
-        if (hasProfileCookie) {
-          router.push("/feed");
-          return;
-        }
-
-        // If no cookie, check database
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile && !error) {
-          // User has profile, set cookie and redirect to feed
-          setProfileCompleteCookieClient();
-          router.push("/feed");
-        } else {
-          // New user, redirect to onboarding
+          if (profile) {
+            // User has completed profile - redirect to feed
+            router.push("/feed");
+          } else {
+            // New user or incomplete profile - redirect to onboarding
+            router.push("/onboarding");
+          }
+        } catch (error) {
+          console.error("Error checking user profile:", error);
+          // Default to onboarding on error
           router.push("/onboarding");
         }
       } else if (event === "SIGNED_OUT") {
-        // User signed out, clear profile cookie and redirect to home
-        clearProfileCompleteCookieClient();
+        // User signed out, redirect to home
         router.push("/");
+      } else if (event === "TOKEN_REFRESHED") {
+        // Token was refreshed, no action needed
+        console.log("Token refreshed successfully");
       }
     });
 

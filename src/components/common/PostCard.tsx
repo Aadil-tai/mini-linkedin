@@ -9,8 +9,8 @@ import {
   MoreHorizontal,
   Trash2,
 } from "lucide-react";
-import { togglePostLike, deletePost } from "@/lib/superbase/postActions";
-import { supabase } from "@/lib/superbase/client";
+import { togglePostLike, deletePost } from "@/lib/supabase/postActions";
+import { supabase } from "@/lib/supabase/client";
 import CommentSection from "./CommentSection";
 
 interface PostCardProps {

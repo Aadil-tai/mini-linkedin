@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/superbase/client";
+import { supabase } from "@/lib/supabase/client";
 
 interface UserProfile {
   avatar_url?: string;

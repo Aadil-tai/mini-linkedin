@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Send } from "lucide-react";
-import { createComment } from "@/lib/superbase/commentActions";
-import type { Comment } from "@/lib/superbase/commentActions";
+import { createComment } from "@/lib/supabase/commentActions";
+import type { Comment } from "@/lib/supabase/commentActions";
 import { useProfile } from "@/hooks/userProfile";
 
 // Validation schema for comments

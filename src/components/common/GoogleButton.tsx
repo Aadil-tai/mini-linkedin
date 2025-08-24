@@ -1,34 +1,23 @@
 "use client";
 
-import { supabase } from "@/lib/superbase/client";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { AuthService } from "@/lib/auth/authService";
 
-export function GoogleButton({
-  text = "Continue with Google",
-}: {
-  text?: string;
-}) {
+function GoogleButton({ text = "Continue with Google" }: { text?: string }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-
-    // Hardcoded for Vercel deployment
-    const redirectUrl = "https://mini-linkedin.vercel.app/auth/callback";
-
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: redirectUrl,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
-      },
-    });
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      await AuthService.loginWithGoogle();
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
   return (
     <button
       onClick={handleGoogleSignIn}
@@ -62,3 +51,5 @@ export function GoogleButton({
     </button>
   );
 }
+
+export default GoogleButton;

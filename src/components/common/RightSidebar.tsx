@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Search, Clock } from "lucide-react";
-import { getRecentPostsForSidebar } from "@/lib/superbase/postActions";
+import { getRecentPostsForSidebar } from "@/lib/supabase/postActions";
 import { stripHtml } from "@/lib/utils";
 
 interface Profile {

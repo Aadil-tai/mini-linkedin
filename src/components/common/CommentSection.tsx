@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { getComments } from "@/lib/superbase/commentActions";
-import type { Comment } from "@/lib/superbase/commentActions";
+import { getComments } from "@/lib/supabase/commentActions";
+import type { Comment } from "@/lib/supabase/commentActions";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
 

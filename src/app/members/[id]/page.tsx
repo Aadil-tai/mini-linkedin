@@ -14,7 +14,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Header from "@/components/common/Header";
-import { supabase } from "@/lib/superbase/client";
+import { supabase } from "@/lib/supabase/client";
 
 interface ProfileData {
   id: string;

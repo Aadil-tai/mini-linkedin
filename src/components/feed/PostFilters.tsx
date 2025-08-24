@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Clock, TrendingUp, Heart, Calendar } from "lucide-react";
-import { PostFilterType } from "@/lib/superbase/postActions";
+import { PostFilterType } from "@/lib/supabase/postActions";
 
 interface PostFiltersProps {
   activeFilter: PostFilterType;

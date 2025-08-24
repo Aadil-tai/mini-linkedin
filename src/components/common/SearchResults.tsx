@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Search, User, FileText, Hash, Clock } from "lucide-react";
-import { SearchResult } from "@/lib/superbase/searchActions";
+import { SearchResult } from "@/lib/supabase/searchActions";
 
 interface SearchResultsProps {
   results: {

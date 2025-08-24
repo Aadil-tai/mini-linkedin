@@ -2,7 +2,7 @@ import {
   getLatestPosts,
   getPopularPosts,
   getTrendingPosts,
-} from "@/lib/superbase/postActions";
+} from "@/lib/supabase/postActions";
 import PostCard from "@/components/common/PostCard";
 import { Suspense } from "react";
 

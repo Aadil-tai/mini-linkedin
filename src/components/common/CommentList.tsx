@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
-import { deleteComment } from "@/lib/superbase/commentActions";
-import { supabase } from "@/lib/superbase/client";
-import type { Comment } from "@/lib/superbase/commentActions";
+import { deleteComment } from "@/lib/supabase/commentActions";
+import { supabase } from "@/lib/supabase/client";
+import type { Comment } from "@/lib/supabase/commentActions";
 
 // Simple time ago function without external dependencies
 const timeAgo = (date: string | Date) => {

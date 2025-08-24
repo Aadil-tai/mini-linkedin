@@ -3,20 +3,19 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Poppins } from "next/font/google";
 
-// Font configuration with proper types
 const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
   display: "swap",
   variable: "--font-poppins",
-  adjustFontFallback: true, // Better fallback behavior
+  adjustFontFallback: true,
   preload: true,
 });
 
 export const metadata: Metadata = {
   title: "Mini LinkedIn - Professional Networking",
   description: "Connect with professionals and grow your network",
-  metadataBase: new URL("https://yourdomain.com"), // Recommended for SEO
+  metadataBase: new URL("https://mini-linkedin.vercel.app/"),
 };
 
 export default function RootLayout({
@@ -26,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>{/* Preconnect to Google Fonts for better performance */}</head>
+      <head></head>
       <body
         className={`${poppins.variable} font-sans antialiased min-h-screen`}
         suppressHydrationWarning

@@ -1,4 +1,7 @@
-import { GoogleButton } from "@/components/common/GoogleButton";
+import dynamic from "next/dynamic";
+const GoogleButton = dynamic(() => import("@/components/common/GoogleButton"), {
+  ssr: false,
+});
 import Link from "next/link";
 import { Metadata } from "next";
 
@@ -12,10 +15,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/30 overflow-x-hidden">
       {/* Animated background elements - Adjusted for mobile */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-20 -right-20 w-60 h-60 md:-top-40 md:-right-40 md:w-80 md:h-80 bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-20 -left-20 w-60 h-60 md:-bottom-40 md:-left-40 md:w-80 md:h-80 bg-indigo-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
+      </div> */}
 
       <div className="relative container mx-auto px-4 sm:px-6 py-8">
         {/* Header - Made responsive */}
@@ -124,112 +127,6 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 rounded-3xl blur-2xl"></div>
                 <div className="relative bg-white/30 dark:bg-gray-800/30 backdrop-blur-xl rounded-3xl aspect-square flex flex-col items-center justify-center border border-white/50 dark:border-gray-700/50 shadow-2xl p-4">
                   {/* Professional network visualization - Adjusted for mobile */}
-                  <div className="space-y-4 sm:space-y-6">
-                    <div className="flex justify-center space-x-2 sm:space-x-4">
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center animate-pulse">
-                        <div className="w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full"></div>
-                      </div>
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center animate-pulse delay-300">
-                        <div className="w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full"></div>
-                      </div>
-                    </div>
-                    <div className="flex justify-center">
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center animate-pulse delay-500">
-                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full"></div>
-                      </div>
-                    </div>
-                    <div className="flex justify-center space-x-2 sm:space-x-4">
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center animate-pulse delay-700">
-                        <div className="w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full"></div>
-                      </div>
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-r from-rose-500 to-orange-500 rounded-full flex items-center justify-center animate-pulse delay-1000">
-                        <div className="w-4 h-4 sm:w-6 sm:h-6 bg-white rounded-full"></div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Connecting lines */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    <svg className="w-full h-full" viewBox="0 0 100 100">
-                      <line
-                        x1="35"
-                        y1="30"
-                        x2="50"
-                        y2="50"
-                        stroke="url(#gradient1)"
-                        strokeWidth="0.5"
-                        opacity="0.6"
-                      />
-                      <line
-                        x1="65"
-                        y1="30"
-                        x2="50"
-                        y2="50"
-                        stroke="url(#gradient2)"
-                        strokeWidth="0.5"
-                        opacity="0.6"
-                      />
-                      <line
-                        x1="35"
-                        y1="70"
-                        x2="50"
-                        y2="50"
-                        stroke="url(#gradient3)"
-                        strokeWidth="0.5"
-                        opacity="0.6"
-                      />
-                      <line
-                        x1="65"
-                        y1="70"
-                        x2="50"
-                        y2="50"
-                        stroke="url(#gradient4)"
-                        strokeWidth="0.5"
-                        opacity="0.6"
-                      />
-                      <defs>
-                        <linearGradient
-                          id="gradient1"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="#3B82F6" />
-                          <stop offset="100%" stopColor="#6366F1" />
-                        </linearGradient>
-                        <linearGradient
-                          id="gradient2"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="#6366F1" />
-                          <stop offset="100%" stopColor="#8B5CF6" />
-                        </linearGradient>
-                        <linearGradient
-                          id="gradient3"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="#8B5CF6" />
-                          <stop offset="100%" stopColor="#EC4899" />
-                        </linearGradient>
-                        <linearGradient
-                          id="gradient4"
-                          x1="0%"
-                          y1="0%"
-                          x2="100%"
-                          y2="100%"
-                        >
-                          <stop offset="0%" stopColor="#EC4899" />
-                          <stop offset="100%" stopColor="#F59E0B" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
                 </div>
               </div>
             </div>

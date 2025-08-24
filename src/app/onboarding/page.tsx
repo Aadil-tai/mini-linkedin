@@ -24,8 +24,8 @@ import {
   onboardingSchema,
 } from "@/lib/schema/onboardingSchema";
 import { FormButton } from "@/components/forms/FormButton";
-import { supabase } from "@/lib/superbase/client";
-import { updateProfile } from "@/lib/superbase/profileAction";
+import { supabase } from "@/lib/supabase/client";
+import { updateProfile } from "@/lib/supabase/profileAction";
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
