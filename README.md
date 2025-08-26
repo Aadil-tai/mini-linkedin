@@ -1,5 +1,9 @@
 # 🚀 Mini LinkedIn - Professional Social Network
 
+> **⚒️ This project is currently under active development!**
+>
+> I'm actively working on new features, bug fixes, and improvements. If you notice any issues or want to contribute, feel free to open an issue or pull request. Stay tuned for updates!
+
 [![Live Demo](https://img.shields.io/badge/Live-Demo-success?style=for-the-badge&logo=vercel)](https://mini-linkedin.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
