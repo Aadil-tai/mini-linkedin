@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useProfile } from "@/hooks/userProfile";
 
 export default function AboutMeSection({ userId }: { userId?: string }) {
@@ -120,10 +121,12 @@ export default function AboutMeSection({ userId }: { userId?: string }) {
           isOpen={!!openAccordions.avatar}
           onToggle={() => toggleAccordion("avatar")}
         >
-          <img
+          <Image
             src={profile.avatar_url}
             alt="User Avatar"
-            style={{ maxWidth: "150px", borderRadius: "8px" }}
+            width={150}
+            height={150}
+            style={{ borderRadius: "8px" }}
           />
         </Accordion>
       )}

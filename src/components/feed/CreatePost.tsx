@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
 import { FormButton } from "@/components/forms/FormButton";
 import { ImageIcon, X, Video, BarChart, Smile } from "lucide-react";
+import Image from "next/image";
 import { createBrowserSupabase } from "@/lib/supabase/client";
 import { useProfile } from "@/hooks/userProfile";
 import type { Post } from "@/lib/supabase/postActions";
@@ -200,9 +201,11 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <div className="flex flex-col md:flex-row space-x-3">
         {profile?.avatar_url ? (
-          <img
+          <Image
             src={profile.avatar_url}
             alt={userName}
+            width={48}
+            height={48}
             className="w-6 h-6 lg:w-12 lg:h-12 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
             onError={(e) => {
               console.error(
@@ -238,9 +241,11 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
               {/* Image Preview */}
               {imagePreview && (
                 <div className="relative">
-                  <img
+                  <Image
                     src={imagePreview}
                     alt="Preview"
+                    width={600}
+                    height={384}
                     className="w-full max-h-96 object-cover rounded-lg"
                   />
                   <button
