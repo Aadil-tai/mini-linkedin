@@ -1,16 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { UserProfile } from "@/types/UserProfile";
 
-interface UserProfile {
-  avatar_url?: string;
-  first_name?: string;
-  last_name?: string;
-  job_title?: string;
-  company?: string;
-  bio?: string;
-  phone?: string;
-  website?: string;
-}
+
 
 export const useUserProfile = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);

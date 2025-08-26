@@ -59,26 +59,15 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
 
   const handleLike = async () => {
     try {
-      const newIsLiked = !isLiked;
-      const result = await togglePostLike(post.id, newIsLiked);
-      setIsLiked(result.is_liked);
-      setLikeCount(result.likes);
+      setIsLiked((prev) => !prev);
+      setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
+      await togglePostLike(post.id, isLiked);
     } catch (error) {
       console.error("Error toggling like:", error);
     }
   };
 
-  const handleCommentClick = () => {
-    setIsCommentsExpanded(!isCommentsExpanded);
-  };
-
-  const handleCommentCountChange = (newCount: number) => {
-    setCommentCount(newCount);
-  };
-
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this post?")) return;
-
     try {
       setIsDeleting(true);
       await deletePost(post.id);
@@ -88,6 +77,14 @@ export default function PostCard({ post, onPostDeleted }: PostCardProps) {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleCommentClick = () => {
+    setIsCommentsExpanded((prev) => !prev);
+  };
+
+  const handleCommentCountChange = (newCount: number) => {
+    setCommentCount(newCount);
   };
 
   // Helper function to render rich text content

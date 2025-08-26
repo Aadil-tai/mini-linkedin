@@ -141,23 +141,11 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-lg shadow-gray-900/5">
+    <header className=" dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-lg shadow-gray-900/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-8">
-            <div
-              className="flex items-center space-x-2 cursor-pointer group"
-              onClick={() => router.push("/feed")}
-            >
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                <span className="text-white font-bold text-sm">ML</span>
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Mini-LinkedIn
-              </span>
-            </div>
-
             {/* Search Bar */}
             <div className="hidden md:block relative" ref={searchRef}>
               <div
@@ -170,8 +158,10 @@ export default function Header() {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
                   ) : (
                     <svg
-                      className={`h-4 w-4 transition-colors duration-200 ${
-                        isSearchFocused ? "text-blue-500" : "text-gray-400"
+                      className={`h-5 w-5 transition-colors duration-200 ${
+                        isSearchFocused
+                          ? "text-blue-600"
+                          : "text-blue-500/80 dark:text-blue-400/80"
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -198,7 +188,7 @@ export default function Header() {
                     }
                   }}
                   onBlur={() => setIsSearchFocused(false)}
-                  className="w-80 pl-10 pr-4 py-2.5 bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-xl text-sm placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
+                  className="w-80 pl-10 pr-4 py-2.5 bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-xl text-sm text-blue-500 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 dark:text-sky-400"
                 />
                 {searchQuery && (
                   <button
@@ -206,7 +196,7 @@ export default function Header() {
                       setSearchQuery("");
                       setShowSearchResults(false);
                     }}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     <svg
                       className="h-4 w-4"

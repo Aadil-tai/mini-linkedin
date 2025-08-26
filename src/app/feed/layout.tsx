@@ -31,9 +31,7 @@ export default function FeedLayout({
             </main>
 
             {/* Right Sidebar */}
-            <aside className="w-[320px] bg-white dark:bg-gray-800 border-l p-4 overflow-y-auto">
-              <RightSidebar />
-            </aside>
+            <RightSidebar />
           </div>
         </div>
       </div>

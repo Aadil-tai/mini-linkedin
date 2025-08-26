@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { createBrowserSupabase } from "@/lib/supabase/client";
-import { AuthService, UserProfile } from '@/lib/auth/authService';
+import { AuthService,  } from '@/lib/auth/authService';
+import { UserProfile } from '@/types/UserProfile';
 
 interface UseAuthReturn {
   user: User | null;
