@@ -1,0 +1,84 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+}
+
+
+model Profile{
+  id  String @id @default(uuid())
+  user_id String? @unique
+  avatar_url String?
+  first_name String?
+  last_name String?
+  full_name String?
+  email String?
+  phone String?
+  job_title String?
+  bio String?
+  professional_summary String?
+  skills String[]
+  company String?
+  company_size String?
+  industry String?
+  location String?
+  website String?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  years_experience Int?
+  education String?
+  volunteer_experience    String?
+  looking_for_job         Boolean? @default(false)
+  open_to_freelance       Boolean? @default(false)
+  available_for_mentoring Boolean? @default(false)
+  open_to_collaborate     Boolean? @default(false)
+  certifications          String[]
+  achievements            String[]
+  languages               String[]
+  interests               String[]
+  hobbies                 String[]
+  
+  social_links            Json?
+
+  posts         Post[]
+  interactions  PostInteraction[]
+}
+
+
+model Post {
+  id          String   @id @default(uuid())
+  profile_id  String?  // Foreign key to Profile
+  content     String
+  image_url   String?
+  likes       Int?     @default(0)
+  comments    Int?     @default(0)
+  shares      Int?     @default(0)
+  is_liked    Boolean? @default(false)
+  created_at  DateTime @default(now())
+
+  profile     Profile? @relation(fields: [profile_id], references: [id])
+  interactions PostInteraction[]
+}
+
+model PostInteraction {
+  id         String   @id @default(uuid())
+  post_id    String?  // Foreign key to Post
+  profile_id String?  // Foreign key to Profile
+  type       String?
+  content    String?
+  created_at DateTime @default(now())
+
+  post    Post?    @relation(fields: [post_id], references: [id])
+  profile Profile? @relation(fields: [profile_id], references: [id])
+}

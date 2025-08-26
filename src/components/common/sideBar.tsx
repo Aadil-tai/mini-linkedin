@@ -46,7 +46,6 @@ function InlineSvgIcon({
   );
 }
 
-// Arrow Icons
 const ArrowLeftIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg
     className={className}
